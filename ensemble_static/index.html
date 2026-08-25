@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NHS Clinical Coding 3-Model Ensemble Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/index.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo-area">
+                <i class="fa-solid fa-laptop-medical logo-icon"></i>
+                <div class="logo-text">
+                    <h1>NHS Clinical Coding</h1>
+                    <span>3-Model Ensemble Validation Hub</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button id="export-btn" class="btn btn-primary btn-glow" disabled>
+                    <i class="fa-solid fa-file-export"></i> Export Final Spreadsheet
+                </button>
+            </div>
+        </header>
+
+        <div class="workspace">
+            <!-- Sidebar -->
+            <aside class="sidebar card">
+                <div class="sidebar-section file-selection">
+                    <h3><i class="fa-solid fa-file-excel"></i> Source Spreadsheet</h3>
+                    <div class="form-group">
+                        <label for="excel-file-select">Select File</label>
+                        <select id="excel-file-select" class="form-control">
+                            <option value="">-- Choose Excel File --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="column-select">Target Text Column</label>
+                        <select id="column-select" class="form-control" disabled>
+                            <option value="Cleaned Data">Cleaned Data</option>
+                        </select>
+                    </div>
+                    <button id="load-file-btn" class="btn btn-secondary btn-block" disabled>
+                        <i class="fa-solid fa-sync"></i> Load Records
+                    </button>
+                </div>
+
+                <div class="sidebar-section record-navigation">
+                    <h3><i class="fa-solid fa-list-ol"></i> Letter Records</h3>
+                    <div class="record-stats">
+                        <span id="reviewed-count">Reviewed: 0/0</span>
+                    </div>
+                    <div id="records-list" class="records-list scrollable">
+                        <div class="list-empty-msg">No spreadsheet loaded yet</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Coding Arena -->
+            <main class="coding-arena">
+                <div class="record-info-bar card">
+                    <div class="record-meta">
+                        <span class="badge badge-info" id="record-index-badge">Record # -</span>
+                    </div>
+                    <div class="record-navigation-arrows">
+                        <button id="prev-record-btn" class="btn btn-icon" disabled><i class="fa-solid fa-chevron-left"></i></button>
+                        <span id="record-progress-text">0 of 0</span>
+                        <button id="next-record-btn" class="btn btn-icon" disabled><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+
+                <div class="dual-panels">
+                    <!-- Left: Clinical Narrative -->
+                    <section class="panel letter-panel card">
+                        <div class="panel-header">
+                            <h2><i class="fa-solid fa-file-invoice"></i> Clinical Narrative</h2>
+                            <button id="highlight-toggle" class="btn btn-xs btn-outline active">
+                                <i class="fa-solid fa-highlighter"></i> Highlights
+                            </button>
+                        </div>
+                        <div class="panel-body">
+                            <div id="clinical-letter-text" class="clinical-letter-text scrollable">
+                                Select a record to view the narrative text...
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Right: Entity Coding Desk -->
+                    <section class="panel coding-panel card">
+                        <div class="panel-header">
+                            <h2><i class="fa-solid fa-tags"></i> Clinical Coding Workspace</h2>
+                            <div class="panel-actions">
+                                <button id="auto-approve-btn" class="btn btn-xs btn-outline" disabled>
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Code High Conf.
+                                </button>
+                            </div>
+                        </div>
+                        <div class="panel-body" style="position:relative;">
+                            <!-- Empty State -->
+                            <div id="extraction-empty-state" class="empty-state">
+                                <i class="fa-solid fa-cubes-stacked empty-icon"></i>
+                                <h3>3-Model Ensemble Extraction</h3>
+                                <p>Run ClinicalBERT + MedCAT + Qwen to extract and validate all clinical entities.</p>
+                                <button id="run-extraction-btn" class="btn btn-primary" disabled>
+                                    <i class="fa-solid fa-bolt"></i> Run Entity Extraction
+                                </button>
+                            </div>
+
+                            <!-- Category Tabs + Entity Cards -->
+                            <div id="entities-workspace" class="entities-workspace hide">
+                                <!-- Category Filter Tabs -->
+                                <div class="category-tabs" id="category-tabs">
+                                    <button class="cat-tab active" data-cat="All"><i class="fa-solid fa-layer-group"></i> All</button>
+                                    <button class="cat-tab" data-cat="Diagnosis"><i class="fa-solid fa-stethoscope"></i> Diagnoses</button>
+                                    <button class="cat-tab" data-cat="Symptom"><i class="fa-solid fa-triangle-exclamation"></i> Symptoms</button>
+                                    <button class="cat-tab" data-cat="Procedure"><i class="fa-solid fa-syringe"></i> Procedures</button>
+                                    <button class="cat-tab" data-cat="Medication"><i class="fa-solid fa-pills"></i> Medications</button>
+                                    <button class="cat-tab" data-cat="Vital"><i class="fa-solid fa-heart-pulse"></i> Vitals</button>
+                                </div>
+                                <div id="entities-list" class="entities-list scrollable"></div>
+                            </div>
+                        </div>
+
+                        <div class="panel-footer hide" id="coding-footer">
+                            <button id="classify-snomed-btn" class="btn btn-secondary">
+                                <i class="fa-solid fa-gears"></i> Classify &amp; Map SNOMED
+                            </button>
+                            <button id="save-row-btn" class="btn btn-success">
+                                <i class="fa-solid fa-floppy-disk"></i> Save &amp; Next
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+
+        <!-- SNOMED Search Modal -->
+        <div id="snomed-modal" class="modal hide">
+            <div class="modal-content card">
+                <div class="modal-header">
+                    <h2><i class="fa-solid fa-search"></i> SNOMED CT Concept Search</h2>
+                    <button class="modal-close-btn" onclick="closeSnomedModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group search-bar-group">
+                        <input type="text" id="snomed-search-input" class="form-control" placeholder="Search SNOMED term (e.g. Type 2 Diabetes)...">
+                        <button id="snomed-search-submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                    </div>
+                    <div class="search-category-info">
+                        Searching scope: <span id="snomed-modal-category" class="status-pill">Diagnosis</span>
+                    </div>
+                    <div id="snomed-results-container" class="snomed-results scrollable">
+                        <div class="snomed-empty-msg">Type a term and click search to query the FHIR server.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast -->
+        <div id="toast" class="toast hide">
+            <i id="toast-icon" class="fa-solid fa-circle-check"></i>
+            <div class="toast-body">
+                <h4 id="toast-title">Success</h4>
+                <p id="toast-desc">Done!</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/index.js"></script>
+</body>
+</html>

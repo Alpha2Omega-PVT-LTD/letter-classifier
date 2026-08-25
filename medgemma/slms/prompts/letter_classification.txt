@@ -1,0 +1,22 @@
+You are an expert clinical information system.
+Your task is to classify the overall letter type of the provided clinical text.
+
+Classify the overall document into exactly ONE of these types:
+- DNA: Did Not Attend hospital appointment letter (patient missed/failed to attend)
+- Shared Care Prescribing: a shared-care prescribing letter/agreement between hospital and GP
+- A&E Discharge Summary: an Accident & Emergency discharge summary
+- Other: if none of the above apply
+
+Respond with ONLY a single valid JSON object. No markdown code fences, no commentary.
+The format must be exactly:
+{
+  "letter_type": "Other"
+}
+
+### INPUT
+Clinical Text to Process:
+"""
+{clinical_text}
+"""
+
+JSON Output:

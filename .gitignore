@@ -1,0 +1,21 @@
+# MedCAT Model Pack & Large Binary Files
+v2_Snomed*
+v2_Snomed2025_MIMIC_IV_bbe806e192df009f/
+
+# Python Cache & Environment
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+
+# Data & Output Files
+ensemble_web_session_progress.json
+*.log
+
+# IDE & System Files
+.vscode/
+.idea/
+.DS_Store
