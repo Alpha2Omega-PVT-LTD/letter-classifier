@@ -109,17 +109,17 @@ function attachEventListeners() {
 }
 
 async function onBatchExtract() {
-    if (!confirm('Run automated 3-model extraction across ALL letters in this folder overnight?')) return;
+    if (!confirm('Run automated 3-model extraction across ALL letters in this folder?')) return;
     if (batchExtractBtn) {
-        batchExtractBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Running Overnight Batch...';
+        batchExtractBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Running Batch Extraction...';
         batchExtractBtn.disabled = true;
     }
-    showToast('Overnight Batch Started', 'Processing all PDF letters automatically...', 'info');
+    showToast('Batch Extraction Started', 'Processing all PDF letters automatically...', 'info');
     try {
         const res = await fetch('/api/batch-extract', { method: 'POST' });
         const data = await res.json();
         if (data.success) {
-            showToast('Batch Complete ⚡', `Processed ${data.processed_count} letters overnight. Saved to Excel!`, 'success');
+            showToast('Batch Complete ⚡', `Processed ${data.processed_count} letters. Saved to Excel!`, 'success');
             await onLoadFolder();
         } else {
             showToast('Batch Error', data.detail || 'Batch processing failed.', 'danger');
@@ -128,7 +128,7 @@ async function onBatchExtract() {
         showToast('Error', 'Batch extraction request failed.', 'danger');
     } finally {
         if (batchExtractBtn) {
-            batchExtractBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Batch Extract All (Overnight)';
+            batchExtractBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Run Batch Extraction';
             batchExtractBtn.disabled = false;
         }
     }
