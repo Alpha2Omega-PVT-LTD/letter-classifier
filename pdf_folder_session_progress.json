@@ -1,0 +1,139 @@
+{
+  "folder_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters",
+  "records": [
+    {
+      "index": 0,
+      "filename": "letter_042_physio.pdf",
+      "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\letter_042_physio.pdf",
+      "text": "Berkshire Community Physiotherapy Service\nChurch Hill House, Turing Drive, Bracknell RG12 7FR\n18 April 2026\nTo: The Practice Manager\nRingmead Medical Practice\nBirch Hill Medical Centre\nLeppington, Bracknell\nBerkshire RG12 7WW\nPatient:\nMs Sandra Whitfield\nDOB:\n08/02/1953\nNHS Number:\n999 744 7964\nAddress:\n114 Kestrel Way, Crowthorne, Berkshire, RG45 6LT\nDear GP,\nThe above patient has completed a course of physiotherapy for chronic low back pain with limited benefit.\nExamination today raised persistent nocturnal pain. We would recommend GP review and\nYours sincerely,\nJ Meredith MCSP\nSenior Physiotherapist\nBerkshire Community Physiotherapy Service",
+      "extracted_entities": [
+        {
+          "id": "E1",
+          "text": "Examination",
+          "category": "Procedure",
+          "confidence": 0.85,
+          "validation_status": "Consensus — 2/3 models (ClinicalBERT & MedCAT)",
+          "status": "Performed",
+          "snomed": "5880005",
+          "decision": "Yes"
+        },
+        {
+          "id": "E2",
+          "text": "physiotherapy",
+          "category": "Procedure",
+          "confidence": 0.7,
+          "validation_status": "Single Model — 1/3 models (ClinicalBERT)",
+          "status": "Performed",
+          "snomed": "",
+          "decision": "Yes"
+        },
+        {
+          "id": "E3",
+          "text": "chronic low back pain",
+          "category": "Medication",
+          "confidence": 0.7,
+          "validation_status": "Single Model — 1/3 models (ClinicalBERT)",
+          "status": "Current",
+          "snomed": "",
+          "decision": "Yes"
+        },
+        {
+          "id": "E4",
+          "text": "persistent nocturnal pain",
+          "category": "Medication",
+          "confidence": 0.7,
+          "validation_status": "Single Model — 1/3 models (ClinicalBERT)",
+          "status": "Current",
+          "snomed": "",
+          "decision": "Yes"
+        },
+        {
+          "id": "E5",
+          "text": "nocturnal pain",
+          "category": "Symptom",
+          "confidence": 0.7,
+          "validation_status": "Single Model — 1/3 models (Qwen)",
+          "status": "Current",
+          "snomed": "",
+          "decision": "Yes"
+        }
+      ],
+      "final_results": {
+        "diagnoses": [],
+        "symptoms": [
+          {
+            "entity": "nocturnal pain",
+            "status": "Current",
+            "snomed": "Not found"
+          }
+        ],
+        "procedures": [
+          {
+            "entity": "Examination",
+            "status": "Performed",
+            "snomed": "5880005"
+          },
+          {
+            "entity": "physiotherapy",
+            "status": "Performed",
+            "snomed": "Not found"
+          }
+        ],
+        "medications": [
+          {
+            "entity": "chronic low back pain",
+            "status": "Current"
+          },
+          {
+            "entity": "persistent nocturnal pain",
+            "status": "Current"
+          }
+        ],
+        "vitals": []
+      },
+      "reviewed": true,
+      "has_extractions": true
+    },
+    {
+      "index": 1,
+      "filename": "letter_056_dna.pdf",
+      "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\letter_056_dna.pdf",
+      "text": "",
+      "extracted_entities": null,
+      "final_results": null,
+      "reviewed": false,
+      "has_extractions": false
+    },
+    {
+      "index": 2,
+      "filename": "letter_077_private_rx.pdf",
+      "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\letter_077_private_rx.pdf",
+      "text": "",
+      "extracted_entities": null,
+      "final_results": null,
+      "reviewed": false,
+      "has_extractions": false
+    },
+    {
+      "index": 3,
+      "filename": "letter_084_discharge.pdf",
+      "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\letter_084_discharge.pdf",
+      "text": "Wexham Park Hospital\nFrimley Health NHS Foundation Trust\nWexham Street, Slough, Berkshire SL2 4HL\nTel: 0300 614 5000\n08 July 2026\nRef: DIS/327854\nTo: The Practice Manager\nRingmead Medical Practice\nBirch Hill Medical Centre\nLeppington, Bracknell\nBerkshire RG12 7WW\nPatient:\nMrs Katherine Ainsworth\nDOB:\n01/08/1939\nNHS Number:\n999 427 8207\nAddress:\n109 Old Bracknell Lane, Bracknell, Berkshire, RG12 9WL\nAdmission date:\n02/07/2026\nDischarge date:\n08/07/2026\nWard:\nF15 Respiratory\nDISCHARGE SUMMARY\nDischarge Diagnosis: Urinary tract infection with delirium\nDear GP, the above patient was admitted via the Emergency Department and treated as an inpatient.\nThey responded well to treatment and were medically fit for discharge with community follow-up as below.\nMedication changes on discharge: None. All regular medications continued unchanged.\nGP Actions: None required. For your records.\nYours sincerely,\nDr F Adeyemi\nFoundation Doctor, on behalf of the ward team\nWexham Park Hospital",
+      "extracted_entities": null,
+      "final_results": null,
+      "reviewed": false,
+      "has_extractions": false
+    },
+    {
+      "index": 4,
+      "filename": "letter_087_bp_readings.pdf",
+      "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\letter_087_bp_readings.pdf",
+      "text": "",
+      "extracted_entities": null,
+      "final_results": null,
+      "reviewed": false,
+      "has_extractions": false
+    }
+  ],
+  "current_index": 0
+}

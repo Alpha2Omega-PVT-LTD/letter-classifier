@@ -1,0 +1,224 @@
+{
+  "letter_042_physio.pdf": {
+    "Diagnosis": [],
+    "Symptom": [
+      {
+        "text": "chronic low back pain",
+        "preferred_name": "Chronic low back pain",
+        "cui": "278860009",
+        "confidence": 1.0
+      },
+      {
+        "text": "pain",
+        "preferred_name": "Pain",
+        "cui": "22253000",
+        "confidence": 1.0
+      }
+    ],
+    "Procedure": [
+      {
+        "text": "Examination",
+        "preferred_name": "Physical examination procedure",
+        "cui": "5880005",
+        "confidence": 0.714
+      }
+    ],
+    "Medication": [],
+    "Vital": []
+  },
+  "letter_056_dna.pdf": {
+    "Diagnosis": [
+      {
+        "text": "March",
+        "preferred_name": "Multinucleated neurons, anhydramnios, renal dysplasia, cerebellar hypoplasia, hydranencephaly syndrome",
+        "cui": "1169358003",
+        "confidence": 1.0
+      }
+    ],
+    "Symptom": [
+      {
+        "text": "DNA",
+        "preferred_name": "Did not attend",
+        "cui": "281399006",
+        "confidence": 0.3235
+      }
+    ],
+    "Procedure": [
+      {
+        "text": "discharged",
+        "preferred_name": "Patient discharge",
+        "cui": "58000006",
+        "confidence": 1.0
+      }
+    ],
+    "Medication": [],
+    "Vital": []
+  },
+  "letter_077_private_rx.pdf": {
+    "Diagnosis": [],
+    "Symptom": [
+      {
+        "text": "weight loss",
+        "preferred_name": "Weight decreased",
+        "cui": "262285001",
+        "confidence": 0.8013
+      }
+    ],
+    "Procedure": [
+      {
+        "text": "consultation",
+        "preferred_name": "Consultation",
+        "cui": "11429006",
+        "confidence": 0.99
+      },
+      {
+        "text": "Injection",
+        "preferred_name": "Injection",
+        "cui": "59108006",
+        "confidence": 0.99
+      },
+      {
+        "text": "Team",
+        "preferred_name": "Tannenbaum electroanalgesia method",
+        "cui": "231113001",
+        "confidence": 1.0
+      }
+    ],
+    "Medication": [],
+    "Vital": [
+      {
+        "text": "weight 112.2 kg",
+        "confidence": 1.0
+      }
+    ]
+  },
+  "letter_084_discharge.pdf": {
+    "Diagnosis": [
+      {
+        "text": "Slough",
+        "preferred_name": "Necrotic debris",
+        "cui": "44015005",
+        "confidence": 1.0
+      },
+      {
+        "text": "Discharge",
+        "preferred_name": "Discharge",
+        "cui": "75823008",
+        "confidence": 0.99
+      },
+      {
+        "text": "Urinary tract infection",
+        "preferred_name": "Urinary tract infectious disease",
+        "cui": "68566005",
+        "confidence": 0.4541
+      },
+      {
+        "text": "delirium",
+        "preferred_name": "Delirium",
+        "cui": "2776000",
+        "confidence": 0.6956
+      }
+    ],
+    "Symptom": [
+      {
+        "text": "follow-up",
+        "preferred_name": "Follow-up status",
+        "cui": "308273005",
+        "confidence": 1.0
+      }
+    ],
+    "Procedure": [
+      {
+        "text": "admitted",
+        "preferred_name": "Hospital admission",
+        "cui": "32485007",
+        "confidence": 1.0
+      },
+      {
+        "text": "Medication changes",
+        "preferred_name": "Change of medication",
+        "cui": "182838006",
+        "confidence": 1.0
+      },
+      {
+        "text": "team",
+        "preferred_name": "Tannenbaum electroanalgesia method",
+        "cui": "231113001",
+        "confidence": 1.0
+      }
+    ],
+    "Medication": [
+      {
+        "text": "medications",
+        "preferred_name": "Drug or medicament",
+        "cui": "410942007",
+        "confidence": 0.99
+      }
+    ],
+    "Vital": []
+  },
+  "letter_087_bp_readings.pdf": {
+    "Diagnosis": [],
+    "Symptom": [],
+    "Procedure": [],
+    "Medication": [],
+    "Vital": [
+      {
+        "text": "Blood Pressure: 147/97",
+        "confidence": 1.0
+      },
+      {
+        "text": "Blood Pressure: 148/101",
+        "confidence": 1.0
+      },
+      {
+        "text": "Blood Pressure: 148/102",
+        "confidence": 1.0
+      },
+      {
+        "text": "Blood Pressure: 152/103",
+        "confidence": 1.0
+      },
+      {
+        "text": "Blood Pressure: 146/102",
+        "confidence": 1.0
+      },
+      {
+        "text": "Blood Pressure: 144/102",
+        "confidence": 1.0
+      },
+      {
+        "text": "Blood Pressure: 154/101",
+        "confidence": 1.0
+      },
+      {
+        "text": "Blood Pressure: 146/99",
+        "confidence": 1.0
+      },
+      {
+        "text": "Blood Pressure: 148/97",
+        "confidence": 1.0
+      },
+      {
+        "text": "Blood Pressure: 149/95",
+        "confidence": 1.0
+      },
+      {
+        "text": "Blood Pressure: 157/99",
+        "confidence": 1.0
+      },
+      {
+        "text": "Blood Pressure: 148/95",
+        "confidence": 1.0
+      },
+      {
+        "text": "Blood Pressure: 156/96",
+        "confidence": 1.0
+      },
+      {
+        "text": "Blood Pressure: : 150/99",
+        "confidence": 1.0
+      }
+    ]
+  }
+}

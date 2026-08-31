@@ -286,7 +286,10 @@ def extract_all_categories_medcat(text: str, cat_model: CAT):
     for ent_id, ent in entities.items():
         cui = ent.get("cui")
         type_ids = ent.get("type_ids", [])
-        pretty_name = ent.get("pretty_name") or ent.get("source_value")
+        source_val = ent.get("source_value") or ent.get("detected_name") or ent.get("pretty_name") or ""
+        pretty_name = ent.get("pretty_name") or source_val
+        start_off = ent.get("start")
+        end_off = ent.get("end")
         meta_anns = ent.get("meta_anns", {})
         acc = ent.get("acc", 1.0)
 
@@ -310,14 +313,18 @@ def extract_all_categories_medcat(text: str, cat_model: CAT):
         if target_cat is None:
             continue
         
+        display_text = source_val if source_val else pretty_name
         # Deduplicate per category per report
-        key = pretty_name.lower()
+        key = display_text.lower().strip()
         if key not in seen[target_cat]:
             seen[target_cat].add(key)
             
             extracted[target_cat].append({
-                "text": pretty_name,
+                "text": display_text,
+                "pretty_name": pretty_name,
                 "cui": cui,
+                "start": start_off,
+                "end": end_off,
                 "score": round(float(acc), 3) if acc is not None else 1.0
             })
 

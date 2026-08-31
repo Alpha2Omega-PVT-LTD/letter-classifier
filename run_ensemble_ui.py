@@ -55,52 +55,98 @@ def get_snomed_mapper():
 # ─────────────────────────────────────────────────────────
 def qwen_extract_all_entities(text: str) -> Dict[str, List[str]]:
     """
-    Uses the SLMS pipeline components (MedicalEntityExtractor + EntityClassifier)
-    which run Qwen via Ollama using step1_extraction.txt and step2_classification.txt
-    to extract and classify all clinical entities (Procedures, Symptoms, Meds, Vitals).
+    Extracts clinical entities across 5 categories using Qwen 2.5 via Ollama.
+    Uses single-pass JSON extraction for maximum speed and recall, with fallback to SLMS pipeline.
     """
-    try:
-        SLMS_DIR = os.path.join(BASE_DIR, "medgemma", "slms")
-        if SLMS_DIR not in sys.path:
-            sys.path.insert(0, SLMS_DIR)
-
-        orig_cwd = os.getcwd()
-        os.chdir(SLMS_DIR)
-        try:
-            from pipeline.extractor import MedicalEntityExtractor
-            from pipeline.classifier import EntityClassifier
-
-            extractor = MedicalEntityExtractor()
-            classifier = EntityClassifier()
-
-            raw_entities = extractor.extract(text)
-
-            result = {"diagnoses": [], "symptoms": [], "procedures": [], "medications": [], "vitals": []}
-
-            for ent in raw_entities:
-                if ent.provisional_type.lower() == "vital":
-                    result["vitals"].append(ent.entity)
-                    continue
-
-                category = classifier.classify(ent)
-                cat_lower = category.lower()
-
-                if cat_lower == "procedure":
-                    result["procedures"].append(ent.entity)
-                elif cat_lower == "symptom":
-                    result["symptoms"].append(ent.entity)
-                elif cat_lower == "medication":
-                    result["medications"].append(ent.entity)
-                elif cat_lower == "diagnosis":
-                    result["diagnoses"].append(ent.entity)
-
-            return result
-        finally:
-            os.chdir(orig_cwd)
-
-    except Exception as e:
-        print(f"[WARN] SLMS pipeline Qwen extraction failed: {e}")
+    if not text or not text.strip():
         return {"diagnoses": [], "symptoms": [], "procedures": [], "medications": [], "vitals": []}
+
+    prompt = f"""You are an expert clinical coding AI system. Read the clinical text carefully and extract ALL mentioned clinical entities into these 5 categories:
+- diagnoses: active, past, or confirmed medical conditions, diseases, diagnoses, or disorders
+- symptoms: patient complaints, symptoms, physical signs, or findings
+- procedures: surgeries, diagnostic tests, imaging, investigations, therapies, or interventions
+- medications: active, historical, or prescribed medications, drugs, or dosages
+- vitals: vital sign measurements (blood pressure, heart rate, temperature, weight, BMI, oxygen saturation)
+
+Extract exact phrases mentioned directly in the clinical text.
+
+Clinical Text:
+{text}
+
+Respond ONLY with a valid JSON object formatted exactly as below with no commentary or markdown code fences:
+{{
+  "diagnoses": ["diagnosis 1", "diagnosis 2"],
+  "symptoms": ["symptom 1"],
+  "procedures": ["procedure 1"],
+  "medications": ["medication 1"],
+  "vitals": ["vital 1"]
+}}"""
+
+    try:
+        import ollama
+        response = ollama.chat(
+            model='qwen2.5:7b-instruct',
+            messages=[{'role': 'user', 'content': prompt}],
+            format='json',
+            options={
+                'temperature': 0.05,
+                'num_predict': 600
+            }
+        )
+        content = response['message']['content']
+        content = re.sub(r"^```(?:json)?\s*", "", content.strip())
+        content = re.sub(r"\s*```$", "", content)
+        data = json.loads(content)
+        return {
+            "diagnoses": data.get("diagnoses", []),
+            "symptoms": data.get("symptoms", []),
+            "procedures": data.get("procedures", []),
+            "medications": data.get("medications", []),
+            "vitals": data.get("vitals", [])
+        }
+    except Exception as e_direct:
+        print(f"[WARN] Single-pass Qwen extraction failed ({e_direct}), trying SLMS pipeline...")
+        try:
+            SLMS_DIR = os.path.join(BASE_DIR, "medgemma", "slms")
+            if SLMS_DIR not in sys.path:
+                sys.path.insert(0, SLMS_DIR)
+
+            orig_cwd = os.getcwd()
+            os.chdir(SLMS_DIR)
+            try:
+                from pipeline.extractor import MedicalEntityExtractor
+                from pipeline.classifier import EntityClassifier
+
+                extractor = MedicalEntityExtractor()
+                classifier = EntityClassifier()
+
+                raw_entities = extractor.extract(text)
+                result = {"diagnoses": [], "symptoms": [], "procedures": [], "medications": [], "vitals": []}
+
+                for ent in raw_entities:
+                    if ent.provisional_type.lower() == "vital":
+                        result["vitals"].append(ent.entity)
+                        continue
+
+                    category = classifier.classify(ent)
+                    cat_lower = category.lower()
+
+                    if cat_lower == "procedure":
+                        result["procedures"].append(ent.entity)
+                    elif cat_lower == "symptom":
+                        result["symptoms"].append(ent.entity)
+                    elif cat_lower == "medication":
+                        result["medications"].append(ent.entity)
+                    elif cat_lower == "diagnosis":
+                        result["diagnoses"].append(ent.entity)
+
+                return result
+            finally:
+                os.chdir(orig_cwd)
+
+        except Exception as e:
+            print(f"[WARN] SLMS pipeline Qwen extraction failed: {e}")
+            return {"diagnoses": [], "symptoms": [], "procedures": [], "medications": [], "vitals": []}
 
 
 # ─────────────────────────────────────────────────────────
@@ -242,17 +288,17 @@ def get_record(index: int):
 
 
 @app.post("/api/extract/{index}")
-def extract_entities(index: int):
+def extract_entities(index: int, force: bool = Query(False)):
     """
-    Full extraction: diagnoses via 3-model consensus, then symptoms/procedures/
-    medications/vitals via Qwen.
+    Full extraction: diagnoses, symptoms, procedures, medications, and vitals
+    via 3-model cross-checking consensus (ClinicalBERT, MedCAT, Qwen).
     """
     session = load_session()
     if not session.get("records") or index < 0 or index >= len(session["records"]):
         raise HTTPException(status_code=404, detail="Record not found")
 
     record = session["records"][index]
-    if record.get("extracted_entities") is not None:
+    if not force and record.get("extracted_entities") is not None:
         return {"entities": record["extracted_entities"]}
 
     clinical_text = record["text"]
@@ -260,6 +306,7 @@ def extract_entities(index: int):
         entities = []
     else:
         try:
+            print(f"[EXTRACT] Running 3-model ensemble extraction for record #{index}...")
             # ── 1. Independent extraction from all 3 models across all categories ──
             cb_all = extract_clinicalbert_all_categories(clinical_text)
             mc_all = extract_medcat_all_categories(clinical_text)
@@ -436,13 +483,21 @@ def main():
     print("=" * 60)
 
     print("Checking dependencies...")
-    try:
-        import fastapi, uvicorn, pandas, openpyxl, requests, ollama
-        print("[OK] All primary Python dependencies are present.")
-    except ImportError as e:
-        print(f"[ERROR] Missing dependency: {e}")
-        print("Please run: pip install fastapi uvicorn pandas openpyxl requests ollama")
+    missing_pkgs = []
+    for pkg in ["fastapi", "uvicorn", "pandas", "openpyxl", "requests", "ollama", "torch", "transformers", "spacy", "medcat"]:
+        try:
+            __import__(pkg)
+        except ImportError:
+            missing_pkgs.append(pkg)
+
+    if missing_pkgs:
+        print(f"[ERROR] Missing required Python package(s): {', '.join(missing_pkgs)}")
+        print("[TIP] You may be running under the wrong Python environment.")
+        print("      Please activate the 'nhs_env' environment: conda activate nhs_env")
+        print("      Or run: C:\\Users\\USER\\miniconda3\\envs\\nhs_env\\python.exe run_ensemble_ui.py")
         sys.exit(1)
+    else:
+        print("[OK] All primary Python dependencies (ClinicalBERT, MedCAT, Qwen, FastAPI) are present.")
 
     print("Checking Ollama model status...")
     try:

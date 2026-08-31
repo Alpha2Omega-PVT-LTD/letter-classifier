@@ -1,0 +1,166 @@
+{
+  "letter_042_physio.pdf": {
+    "Diagnosis": [
+      {
+        "text": "chronic low back pain",
+        "score": 0.9993,
+        "sentence": "The above patient has completed a course of physiotherapy for chronic low back pain with limited benefit"
+      }
+    ],
+    "Symptom": [
+      {
+        "text": "persistent nocturnal pain",
+        "score": 0.9971,
+        "sentence": "Examination today raised persistent nocturnal pain"
+      }
+    ],
+    "Procedure": [
+      {
+        "text": "physiotherapy",
+        "score": 0.9959,
+        "sentence": "The above patient has completed a course of physiotherapy for chronic low back pain with limited benefit"
+      },
+      {
+        "text": "Examination",
+        "score": 0.9957,
+        "sentence": "Examination today raised persistent nocturnal pain"
+      }
+    ],
+    "Medication": [],
+    "Vital": []
+  },
+  "letter_056_dna.pdf": {
+    "Diagnosis": [],
+    "Symptom": [],
+    "Procedure": [],
+    "Medication": [],
+    "Vital": []
+  },
+  "letter_077_private_rx.pdf": {
+    "Diagnosis": [],
+    "Symptom": [],
+    "Procedure": [
+      {
+        "text": "loss",
+        "score": 0.6151,
+        "sentence": "Your patient has completed a weight loss consultation with MedExpress and we have provided them with"
+      }
+    ],
+    "Medication": [
+      {
+        "text": "Mounjaro\u00ae Injection",
+        "score": 0.9544,
+        "sentence": "Mounjaro\u00ae Injection 2.5 mg (Weeks 1-4)"
+      }
+    ],
+    "Vital": [
+      {
+        "text": "Weight: 112.2 kg",
+        "score": 1.0,
+        "sentence": "38.82 (height 170 cm; weight 112.2 kg)"
+      }
+    ]
+  },
+  "letter_084_discharge.pdf": {
+    "Diagnosis": [
+      {
+        "text": "Urinary tract infection",
+        "score": 0.9982,
+        "sentence": "Discharge Diagnosis: Urinary tract infection with delirium"
+      },
+      {
+        "text": "delirium",
+        "score": 0.9935,
+        "sentence": "Discharge Diagnosis: Urinary tract infection with delirium"
+      }
+    ],
+    "Symptom": [],
+    "Procedure": [
+      {
+        "text": "treatment",
+        "score": 0.9877,
+        "sentence": "They responded well to treatment and were medically fit for discharge with community follow-up as below"
+      }
+    ],
+    "Medication": [],
+    "Vital": []
+  },
+  "letter_087_bp_readings.pdf": {
+    "Diagnosis": [],
+    "Symptom": [],
+    "Procedure": [],
+    "Medication": [],
+    "Vital": [
+      {
+        "text": "Blood Pressure: 147/97",
+        "score": 1.0,
+        "sentence": "24.06.26 am 147/97 pm 148/101"
+      },
+      {
+        "text": "Blood Pressure: 148/101",
+        "score": 1.0,
+        "sentence": "24.06.26 am 147/97 pm 148/101"
+      },
+      {
+        "text": "Blood Pressure: 148/102",
+        "score": 1.0,
+        "sentence": "25.06.26 am 148/102 pm 152/103"
+      },
+      {
+        "text": "Blood Pressure: 152/103",
+        "score": 1.0,
+        "sentence": "25.06.26 am 148/102 pm 152/103"
+      },
+      {
+        "text": "Blood Pressure: 146/102",
+        "score": 1.0,
+        "sentence": "26.06.26 am 146/102 pm 144/102"
+      },
+      {
+        "text": "Blood Pressure: 144/102",
+        "score": 1.0,
+        "sentence": "26.06.26 am 146/102 pm 144/102"
+      },
+      {
+        "text": "Blood Pressure: 154/101",
+        "score": 1.0,
+        "sentence": "27.06.26 am 154/101 pm 146/99"
+      },
+      {
+        "text": "Blood Pressure: 146/99",
+        "score": 1.0,
+        "sentence": "27.06.26 am 154/101 pm 146/99"
+      },
+      {
+        "text": "Blood Pressure: 148/97",
+        "score": 1.0,
+        "sentence": "28.06.26 am 148/97 pm 149/95"
+      },
+      {
+        "text": "Blood Pressure: 149/95",
+        "score": 1.0,
+        "sentence": "28.06.26 am 148/97 pm 149/95"
+      },
+      {
+        "text": "Blood Pressure: 157/99",
+        "score": 1.0,
+        "sentence": "29.06.26 am 154/101 pm 157/99"
+      },
+      {
+        "text": "Blood Pressure: 148/95",
+        "score": 1.0,
+        "sentence": "30.06.26 am 148/95 pm 156/96"
+      },
+      {
+        "text": "Blood Pressure: 156/96",
+        "score": 1.0,
+        "sentence": "30.06.26 am 148/95 pm 156/96"
+      },
+      {
+        "text": "Blood Pressure: 150/99",
+        "score": 1.0,
+        "sentence": "Average: 150/99 \u2014 patient requests these are added to their record"
+      }
+    ]
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "folder_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters",
+  "records": [
+    {
+      "index": 0,
+      "filename": "clinical_letter.pdf",
+      "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\clinical_letter.pdf",
+      "text": "",
+      "has_extractions": false,
+      "reviewed": false,
+      "extracted_entities": null,
+      "final_results": null
+    },
+    {
+      "index": 1,
+      "filename": "letter_042_physio.pdf",
+      "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\letter_042_physio.pdf",
+      "text": "",
+      "has_extractions": false,
+      "reviewed": false,
+      "extracted_entities": null,
+      "final_results": null
+    },
+    {
+      "index": 2,
+      "filename": "letter_056_dna.pdf",
+      "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\letter_056_dna.pdf",
+      "text": "",
+      "has_extractions": false,
+      "reviewed": false,
+      "extracted_entities": null,
+      "final_results": null
+    },
+    {
+      "index": 3,
+      "filename": "letter_066_clinical.pdf",
+      "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\letter_066_clinical.pdf",
+      "text": "",
+      "has_extractions": false,
+      "reviewed": false,
+      "extracted_entities": null,
+      "final_results": null
+    },
+    {
+      "index": 4,
+      "filename": "letter_069_screening.pdf",
+      "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\letter_069_screening.pdf",
+      "text": "",
+      "has_extractions": false,
+      "reviewed": false,
+      "extracted_entities": null,
+      "final_results": null
+    },
+    {
+      "index": 5,
+      "filename": "letter_077_private_rx.pdf",
+      "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\letter_077_private_rx.pdf",
+      "text": "",
+      "has_extractions": false,
+      "reviewed": false,
+      "extracted_entities": null,
+      "final_results": null
+    },
+    {
+      "index": 6,
+      "filename": "letter_080_clinical.pdf",
+      "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\letter_080_clinical.pdf",
+      "text": "",
+      "has_extractions": false,
+      "reviewed": false,
+      "extracted_entities": null,
+      "final_results": null
+    },
+    {
+      "index": 7,
+      "filename": "letter_084_discharge.pdf",
+      "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\letter_084_discharge.pdf",
+      "text": "",
+      "has_extractions": false,
+      "reviewed": false,
+      "extracted_entities": null,
+      "final_results": null
+    },
+    {
+      "index": 8,
+      "filename": "letter_085_private_rx.pdf",
+      "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\letter_085_private_rx.pdf",
+      "text": "",
+      "has_extractions": false,
+      "reviewed": false,
+      "extracted_entities": null,
+      "final_results": null
+    },
+    {
+      "index": 9,
+      "filename": "letter_087_bp_readings.pdf",
+      "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\letter_087_bp_readings.pdf",
+      "text": "",
+      "has_extractions": false,
+      "reviewed": false,
+      "extracted_entities": null,
+      "final_results": null
+    }
+  ]
+}

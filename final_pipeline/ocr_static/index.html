@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NHS Clinical Coding 3-Model Ensemble Platform</title>
+    <title>NHS Clinical OCR & Coding Platform</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/index.css">
+    <link rel="stylesheet" href="/static/index.css?v=ocr_v2">
 </head>
 <body>
     <div class="app-container">
         <header class="app-header">
             <div class="logo-area">
-                <i class="fa-solid fa-laptop-medical logo-icon"></i>
+                <i class="fa-solid fa-file-pdf logo-icon"></i>
                 <div class="logo-text">
-                    <h1>NHS Clinical Coding</h1>
-                    <span>3-Model Ensemble Validation Hub</span>
+                    <h1>NHS Clinical OCR &amp; Coding Hub</h1>
+                    <span>PaddleOCR &amp; Qwen SLMS PDF Extraction</span>
                 </div>
             </div>
             <div class="header-actions">
@@ -31,31 +31,23 @@
             <!-- Sidebar -->
             <aside class="sidebar card">
                 <div class="sidebar-section file-selection">
-                    <h3><i class="fa-solid fa-file-excel"></i> Dataset Selection</h3>
+                    <h3><i class="fa-solid fa-folder-open"></i> PDF Folder Selection</h3>
                     <div class="form-group">
-                        <label for="excel-file-select">Excel File</label>
-                        <select id="excel-file-select" class="form-control">
-                            <option value="">Scanning Excel files...</option>
-                        </select>
+                        <label for="folder-path-input">Folder Path</label>
+                        <input type="text" id="folder-path-input" class="form-control" placeholder="Enter folder path..." value="">
                     </div>
-                    <div class="form-group">
-                        <label for="column-select">Clinical Text Column</label>
-                        <select id="column-select" class="form-control" disabled>
-                            <option value="">Select column...</option>
-                        </select>
-                    </div>
-                    <button id="load-records-btn" class="btn btn-primary btn-block" disabled>
-                        <i class="fa-solid fa-database"></i> Load Dataset
+                    <button id="load-folder-btn" class="btn btn-primary btn-block">
+                        <i class="fa-solid fa-folder-tree"></i> Load Folder PDFs
                     </button>
                 </div>
 
                 <div class="sidebar-section record-navigation">
-                    <h3><i class="fa-solid fa-list-check"></i> Dataset Records</h3>
+                    <h3><i class="fa-solid fa-list-check"></i> PDF Records</h3>
                     <div class="record-stats">
                         <span id="reviewed-count">Reviewed: 0/0</span>
                     </div>
                     <div id="records-list" class="records-list scrollable">
-                        <div class="list-empty-msg">Select file &amp; column to load records</div>
+                        <div class="list-empty-msg">No PDF folder loaded yet</div>
                     </div>
                 </div>
             </aside>
@@ -64,35 +56,51 @@
             <main class="coding-arena">
                 <div class="record-info-bar card">
                     <div class="record-meta">
-                        <span class="badge badge-info" id="record-index-badge">Record # -</span>
+                        <i class="fa-solid fa-file-lines" style="color: var(--primary-color);"></i>
+                        <span class="badge badge-info" id="record-index-badge">No PDF Selected</span>
                     </div>
                     <div class="record-navigation-arrows">
-                        <button id="prev-record-btn" class="btn btn-icon" disabled><i class="fa-solid fa-chevron-left"></i></button>
+                        <button id="prev-record-btn" class="btn btn-icon" disabled title="Previous PDF"><i class="fa-solid fa-chevron-left"></i></button>
                         <span id="record-progress-text">0 of 0</span>
-                        <button id="next-record-btn" class="btn btn-icon" disabled><i class="fa-solid fa-chevron-right"></i></button>
+                        <button id="next-record-btn" class="btn btn-icon" disabled title="Next PDF"><i class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>
 
                 <div class="dual-panels">
-                    <!-- Left: Clinical Narrative -->
+                    <!-- Left: Clinical Narrative / PDF Viewer -->
                     <section class="panel letter-panel card">
                         <div class="panel-header">
-                            <h2><i class="fa-solid fa-file-invoice"></i> Clinical Narrative</h2>
-                            <button id="highlight-toggle" class="btn btn-xs btn-outline active">
-                                <i class="fa-solid fa-highlighter"></i> Highlights
-                            </button>
+                            <h2 id="pdf-view-title"><i class="fa-solid fa-file-pdf"></i> Clinical Document</h2>
+                            <div class="view-mode-toggle">
+                                <button id="view-mode-pdf" class="btn btn-xs btn-outline active">
+                                    <i class="fa-solid fa-eye"></i> PDF View
+                                </button>
+                                <button id="view-mode-text" class="btn btn-xs btn-outline">
+                                    <i class="fa-solid fa-font"></i> Extracted Text
+                                </button>
+                                <button id="highlight-toggle" class="btn btn-xs btn-outline active hide">
+                                    <i class="fa-solid fa-highlighter"></i> Highlights
+                                </button>
+                            </div>
                         </div>
-                        <div class="panel-body">
-                            <div id="clinical-letter-text" class="clinical-letter-text scrollable">
-                                Select a record to view the narrative text...
+                        <div class="panel-body" style="padding: 0; overflow: hidden; position: relative;">
+                            <!-- PDF Viewer Frame -->
+                            <div id="pdf-viewer-container" class="doc-container">
+                                <iframe id="pdf-viewer-iframe" src="" title="PDF Document Viewer" style="width: 100%; height: 100%; border: none;"></iframe>
+                            </div>
+                            <!-- OCR Text View Container -->
+                            <div id="text-viewer-container" class="doc-container hide scrollable" style="padding: 18px;">
+                                <div id="clinical-letter-text" class="clinical-letter-text">
+                                    Select a record from the PDF list to view narrative...
+                                </div>
                             </div>
                         </div>
                     </section>
 
-                    <!-- Right: Entity Coding Desk -->
+                    <!-- Right: Entity Coding Workspace -->
                     <section class="panel coding-panel card">
                         <div class="panel-header">
-                            <h2><i class="fa-solid fa-tags"></i> Clinical Coding Workspace</h2>
+                            <h2><i class="fa-solid fa-tags"></i> Extracted Contents &amp; SNOMED</h2>
                             <div class="panel-actions">
                                 <button id="auto-approve-btn" class="btn btn-xs btn-outline" disabled>
                                     <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Code High Conf.
@@ -102,9 +110,9 @@
                         <div class="panel-body" style="position:relative;">
                             <!-- Empty State -->
                             <div id="extraction-empty-state" class="empty-state">
-                                <i class="fa-solid fa-cubes-stacked empty-icon"></i>
-                                <h3>3-Model Ensemble Extraction</h3>
-                                <p>Run ClinicalBERT + MedCAT + Qwen to extract and validate all clinical entities.</p>
+                                <i class="fa-solid fa-wand-magic-sparkles empty-icon"></i>
+                                <h3>PaddleOCR &amp; Qwen Extraction</h3>
+                                <p>Extract clinical entities, confidence status, and SNOMED codes from the selected PDF.</p>
                                 <button id="run-extraction-btn" class="btn btn-primary" disabled>
                                     <i class="fa-solid fa-bolt"></i> Run Entity Extraction
                                 </button>
@@ -130,7 +138,7 @@
                                 <i class="fa-solid fa-gears"></i> Classify &amp; Map SNOMED
                             </button>
                             <button id="save-row-btn" class="btn btn-success">
-                                <i class="fa-solid fa-floppy-disk"></i> Save &amp; Next
+                                <i class="fa-solid fa-floppy-disk"></i> Save &amp; Next PDF
                             </button>
                         </div>
                     </section>
@@ -147,14 +155,14 @@
                 </div>
                 <div class="modal-body">
                     <div class="form-group search-bar-group">
-                        <input type="text" id="snomed-search-input" class="form-control" placeholder="Search SNOMED term (e.g. Type 2 Diabetes)...">
+                        <input type="text" id="snomed-search-input" class="form-control" placeholder="Search SNOMED term (e.g. Diabetes, Hypertension)...">
                         <button id="snomed-search-submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
                     </div>
                     <div class="search-category-info">
-                        Searching scope: <span id="snomed-modal-category" class="status-pill">Diagnosis</span>
+                        Scope: <span id="snomed-modal-category" class="status-pill">Diagnosis</span>
                     </div>
                     <div id="snomed-results-container" class="snomed-results scrollable">
-                        <div class="snomed-empty-msg">Type a term and click search to query the FHIR server.</div>
+                        <div class="snomed-empty-msg">Type a term and click search to query SNOMED CT.</div>
                     </div>
                 </div>
             </div>
@@ -170,6 +178,6 @@
         </div>
     </div>
 
-    <script src="/static/index.js"></script>
+    <script src="/static/index.js?v=ocr_v2"></script>
 </body>
 </html>

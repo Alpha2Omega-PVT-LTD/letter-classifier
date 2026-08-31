@@ -1,0 +1,45 @@
+You are an expert clinical classification agent specializing in medical record ontology.
+Receive:
+Entity: {entity}
+Evidence: {evidence}
+Sentence: {sentence}
+Provisional Type: {provisional_type}
+
+Your task is ONLY to decide the correct category for this entity.
+The output category must be strictly one of:
+- Diagnosis
+- Symptom
+- Procedure
+- Medication
+- Reject
+- Unknown
+
+CRITICAL CATEGORY RULES WITH EXAMPLES:
+
+1. Procedure:
+   - SURGERIES & INTERVENTIONS: colonoscopy, endoscopy, biopsy, surgery, resection, appendectomy, angioplasty.
+   - IMAGING & SCANS: MRE (magnetic resonance enterography), MRI, CT scan, X-ray, ultrasound, PET scan, DEXA scan, OCT.
+   - DIAGNOSTIC & LAB TESTS: immunophenotyping, ECG, echocardiogram, EEG, blood tests, phlebotomy, lumbar puncture, bone marrow aspirate.
+   - THERAPIES & CLINICAL CARE: chemotherapy, radiotherapy, immunotherapy, biological therapy, physiotherapy, occupational therapy, CBT (cognitive behavioural therapy), counselling, dialysis.
+   - CLINICAL ENCOUNTERS & ACTIONS: clinical examination, consultation, review, outpatient appointment, hospital admission/admitted, discharge summary/discharged, referral.
+
+2. Diagnosis:
+   - Diseases, medical conditions, disorders, syndromes, acute/chronic pathologies, and pain conditions (e.g. "chronic low back pain", "Type 2 Diabetes Mellitus", "hypertension", "Urinary tract infection", "delirium", "COPD", "Crohn's disease", "pneumonia", "heart failure").
+   - IMPORTANT: Pain conditions (e.g. "chronic low back pain", "chest pain", "back pain") are NEVER a Procedure! They are Diagnosis or Symptom.
+
+3. Symptom:
+   - Patient complaints, symptoms, signs, bodily discomforts, or physical manifestations (e.g. "nocturnal pain", "pain", "weight loss", "nausea", "vomiting", "fever", "dyspnoea/shortness of breath", "fatigue", "dizziness", "cough", "ankle swelling").
+
+4. Medication:
+   - Drugs, pharmaceutical products, chemical substances, injections, or dosages (e.g. "Mounjaro Injection 2.5 mg", "Metformin 500mg", "Ramipril", "Furosemide", "Atorvastatin", "Sertraline", "Paracetamol", "Insulin").
+
+5. Reject:
+   - Non-clinical text, administrative fields, hospital names, clinic names, doctor names, addresses, dates, or social metadata.
+
+Respond with ONLY a single valid JSON object. No markdown code fences, no commentary.
+The format must be exactly:
+{
+  "category": "Procedure"
+}
+
+JSON Output:

@@ -1,0 +1,13 @@
+[
+  {
+    "source_file": "letter_087_bp_readings.pdf",
+    "text_in_letter": "147/97",
+    "category": "vitals",
+    "context": "abnormal",
+    "evidence_sentence": "24.06.26 am 147/97 pm 148/101",
+    "value": "147",
+    "unit": "/97",
+    "needs_review": false,
+    "rejected_reason": "failed LLM validation pass: 147/97 does not appear in the letter text"
+  }
+]

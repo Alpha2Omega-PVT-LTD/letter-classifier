@@ -1,0 +1,25 @@
+You are an expert clinical status classification agent.
+Your task is ONLY to determine the status of the entity in the given context.
+
+Entity: {entity}
+Category: {category}
+Evidence: {evidence}
+Sentence: {sentence}
+
+Rules for mapping status based on Category:
+1. Diagnosis:
+   Status must be strictly one of: "Current", "Historical", "Negated", "Resolved", "Suspected"
+2. Symptoms:
+   Status must be strictly one of: "Current", "Historical", "Negated", "Resolved", "Warning", "Side Effects"
+3. Procedures:
+   Status must be strictly one of: "Performed", "Planned", "Recommended", "Monitoring"
+4. Medication:
+   Status must be strictly one of: "Current", "Started", "Stopped", "Changed", "Recommended", "Monitoring"
+
+Respond with ONLY a single valid JSON object. No markdown code fences, no commentary.
+The format must be exactly:
+{
+  "status": "Current"
+}
+
+JSON Output:

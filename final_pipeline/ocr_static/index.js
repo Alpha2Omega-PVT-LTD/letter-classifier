@@ -1,21 +1,26 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// NHS Clinical Coding & 3-Model Ensemble UI (Excel Dataset Enabled)
+// NHS PDF Letter Clinical OCR & Coding UI (PaddleOCR & Qwen Enabled)
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── DOM Refs ─────────────────────────────────────────────────────────────────
-const excelFileSelect   = document.getElementById('excel-file-select');
-const columnSelect      = document.getElementById('column-select');
-const loadRecordsBtn    = document.getElementById('load-records-btn');
-const recordsList       = document.getElementById('records-list');
-const reviewedCountEl   = document.getElementById('reviewed-count');
+const folderPathInput    = document.getElementById('folder-path-input');
+const loadFolderBtn      = document.getElementById('load-folder-btn');
+const recordsList        = document.getElementById('records-list');
+const reviewedCountEl    = document.getElementById('reviewed-count');
 
 const recordIndexBadge   = document.getElementById('record-index-badge');
 const recordProgressText = document.getElementById('record-progress-text');
 const prevRecordBtn      = document.getElementById('prev-record-btn');
 const nextRecordBtn      = document.getElementById('next-record-btn');
 
+const viewModePdfBtn     = document.getElementById('view-mode-pdf');
+const viewModeTextBtn    = document.getElementById('view-mode-text');
+const pdfViewerContainer = document.getElementById('pdf-viewer-container');
+const textViewerContainer = document.getElementById('text-viewer-container');
+const pdfViewerIframe    = document.getElementById('pdf-viewer-iframe');
 const clinicalLetterText = document.getElementById('clinical-letter-text');
 const highlightToggle    = document.getElementById('highlight-toggle');
+
 const runExtractionBtn   = document.getElementById('run-extraction-btn');
 const autoApproveBtn     = document.getElementById('auto-approve-btn');
 
@@ -47,6 +52,7 @@ let currentRecord = null;
 let activeEntityDecisions = [];
 let activeCategoryFilter = 'All';
 let highlightEnabled = true;
+let currentViewMode = 'pdf'; // 'pdf' or 'text'
 let snomedTargetEntityId = null;
 
 // ── Status options per category ───────────────────────────────────────────────
@@ -67,15 +73,12 @@ function getStatusOptions(category, selected) {
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    fetchExcelFiles();
+    fetchDefaultFolder();
     attachEventListeners();
 });
 
 function attachEventListeners() {
-    if (excelFileSelect) excelFileSelect.addEventListener('change', onFileSelected);
-    if (columnSelect) columnSelect.addEventListener('change', onColumnSelected);
-    if (loadRecordsBtn) loadRecordsBtn.addEventListener('click', onLoadRecords);
-
+    if (loadFolderBtn) loadFolderBtn.addEventListener('click', onLoadFolder);
     prevRecordBtn.addEventListener('click', () => navigateRecord(-1));
     nextRecordBtn.addEventListener('click', () => navigateRecord(1));
     runExtractionBtn.addEventListener('click', runExtraction);
@@ -84,6 +87,9 @@ function attachEventListeners() {
     saveRowBtn.addEventListener('click', saveAndNext);
     exportBtn.addEventListener('click', exportExcel);
     highlightToggle.addEventListener('click', toggleHighlight);
+
+    viewModePdfBtn.addEventListener('click', () => setViewMode('pdf'));
+    viewModeTextBtn.addEventListener('click', () => setViewMode('text'));
 
     // Category tabs
     categoryTabs.querySelectorAll('.cat-tab').forEach(tab => {
@@ -101,75 +107,53 @@ function attachEventListeners() {
     snomedModal.addEventListener('click', e => { if (e.target === snomedModal) closeSnomedModal(); });
 }
 
-// ── Excel Files & Columns Loading ──────────────────────────────────────────────
-async function fetchExcelFiles() {
-    try {
-        const res = await fetch('/api/files');
-        const files = await res.json();
-        excelFileSelect.innerHTML = '<option value="">Select Excel dataset...</option>';
-        if (files && files.length > 0) {
-            files.forEach(f => {
-                const opt = document.createElement('option');
-                opt.value = f.path;
-                opt.textContent = f.name;
-                excelFileSelect.appendChild(opt);
-            });
-            // Auto-select first file if available
-            excelFileSelect.selectedIndex = 1;
-            onFileSelected();
-        } else {
-            excelFileSelect.innerHTML = '<option value="">No .xlsx files found in workspace</option>';
-        }
-    } catch(e) {
-        console.warn('Could not fetch files', e);
+// ── View Mode Switcher ────────────────────────────────────────────────────────
+function setViewMode(mode) {
+    currentViewMode = mode;
+    if (mode === 'pdf') {
+        viewModePdfBtn.classList.add('active');
+        viewModeTextBtn.classList.remove('active');
+        pdfViewerContainer.classList.remove('hide');
+        textViewerContainer.classList.add('hide');
+        highlightToggle.classList.add('hide');
+    } else {
+        viewModeTextBtn.classList.add('active');
+        viewModePdfBtn.classList.remove('active');
+        textViewerContainer.classList.remove('hide');
+        pdfViewerContainer.classList.add('hide');
+        highlightToggle.classList.remove('hide');
     }
 }
 
-async function onFileSelected() {
-    const filePath = excelFileSelect.value;
-    columnSelect.innerHTML = '<option value="">Select column...</option>';
-    columnSelect.disabled = true;
-    loadRecordsBtn.disabled = true;
-
-    if (!filePath) return;
-
+// ── Folder Loading ────────────────────────────────────────────────────────────
+async function fetchDefaultFolder() {
     try {
-        const res = await fetch(`/api/columns?file_path=${encodeURIComponent(filePath)}`);
-        const cols = await res.json();
-        if (cols && cols.length > 0) {
-            cols.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c;
-                opt.textContent = c;
-                if (c === 'Cleaned Data' || c === 'Clinical Text' || c === 'Text') opt.selected = true;
-                columnSelect.appendChild(opt);
-            });
-            columnSelect.disabled = false;
-            onColumnSelected();
+        const res = await fetch('/api/default-folder');
+        const data = await res.json();
+        if (data.default_folder && folderPathInput) {
+            folderPathInput.value = data.default_folder;
+            onLoadFolder();
         }
     } catch(e) {
-        showToast('Error', 'Failed to read columns from file.', 'danger');
+        console.warn('Could not fetch default folder', e);
     }
 }
 
-function onColumnSelected() {
-    loadRecordsBtn.disabled = !columnSelect.value;
-}
+async function onLoadFolder() {
+    const folderPath = folderPathInput ? folderPathInput.value.trim() : '';
+    if (!folderPath) {
+        showToast('Warning', 'Please enter a valid folder path.', 'warning');
+        return;
+    }
 
-async function onLoadRecords() {
-    const filePath = excelFileSelect.value;
-    const colName = columnSelect.value;
-
-    if (!filePath || !colName) return;
-
-    loadRecordsBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading Records...';
-    loadRecordsBtn.disabled = true;
+    loadFolderBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Scanning PDFs...';
+    loadFolderBtn.disabled = true;
 
     try {
-        const res = await fetch('/api/load-records', {
+        const res = await fetch('/api/load-folder', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ file_path: filePath, column: colName })
+            body: JSON.stringify({ folder_path: folderPath })
         });
         const data = await res.json();
         if (data.success) {
@@ -178,29 +162,41 @@ async function onLoadRecords() {
             renderRecordsSidebar();
             exportBtn.disabled = false;
             loadRecord(currentRecordIndex);
-            showToast('Dataset Loaded', `Loaded ${data.total_records} records.`, 'success');
+            showToast('Folder Loaded', `Found ${data.total_records} PDF letters.`, 'success');
+        } else {
+            showToast('Error', data.detail || 'Could not load folder.', 'danger');
         }
     } catch(e) {
-        showToast('Error', 'Failed to load dataset records.', 'danger');
+        showToast('Error', 'Failed to scan folder for PDFs.', 'danger');
     } finally {
-        loadRecordsBtn.innerHTML = '<i class="fa-solid fa-database"></i> Load Dataset';
-        loadRecordsBtn.disabled = false;
+        loadFolderBtn.innerHTML = '<i class="fa-solid fa-folder-tree"></i> Load Folder PDFs';
+        loadFolderBtn.disabled = false;
     }
 }
 
-// ── Sidebar ──────────────────────────────────────────────────────────────────
+// ── Sidebar Records List ──────────────────────────────────────────────────────
 function renderRecordsSidebar() {
     const reviewed = loadedRecords.filter(r => r.reviewed).length;
     reviewedCountEl.textContent = `Reviewed: ${reviewed}/${loadedRecords.length}`;
     recordsList.innerHTML = '';
+
     loadedRecords.forEach((r, i) => {
         const div = document.createElement('div');
-        div.className = `record-item${i === currentRecordIndex ? ' active' : ''}`;
+        div.className = `record-list-item${i === currentRecordIndex ? ' active' : ''}`;
+        div.style.display = 'flex';
+        div.style.alignItems = 'center';
+        div.style.justifyContent = 'space-between';
+        div.style.padding = '10px 14px';
+        div.style.cursor = 'pointer';
+        div.style.borderBottom = '1px solid rgba(226, 232, 240, 0.6)';
+
+        const pdfName = r.filename || `Record #${i + 1}`;
         div.innerHTML = `
-            <span class="record-label">Record #${r.index + 1}</span>
-            <div class="record-badges">
-                ${r.reviewed ? '<span class="badge badge-success"><i class="fa-solid fa-check"></i> Reviewed</span>' : (r.has_extractions ? '<span class="badge badge-warning">Extracted</span>' : '<span class="badge badge-info">Pending</span>')}
+            <div style="display:flex;align-items:center;gap:10px;overflow:hidden;flex:1;">
+                <i class="fa-solid fa-file-pdf" style="color: #ef4444; font-size: 16px; flex-shrink: 0;"></i>
+                <span style="font-size:13px;font-weight:600;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${pdfName}">${pdfName}</span>
             </div>
+            <span class="record-list-status" style="margin-left: 8px;">${r.reviewed ? '<i class="fa-solid fa-check-circle text-success" title="Reviewed"></i>' : (r.has_extractions ? '<i class="fa-solid fa-circle-dot text-warning" title="Entities Extracted"></i>' : '<i class="fa-regular fa-circle text-muted" title="Pending"></i>')}</span>
         `;
         div.addEventListener('click', () => loadRecord(i));
         recordsList.appendChild(div);
@@ -210,37 +206,47 @@ function renderRecordsSidebar() {
 // ── Record Loading ────────────────────────────────────────────────────────────
 async function loadRecord(index) {
     currentRecordIndex = index;
-    const res = await fetch(`/api/record/${index}`);
-    currentRecord = await res.json();
 
-    recordIndexBadge.textContent = `Record #${index + 1}`;
+    const item = loadedRecords[index] || {};
+    const fileName = item.filename || `Record #${index + 1}`;
+    recordIndexBadge.textContent = fileName;
     recordProgressText.textContent = `${index + 1} of ${loadedRecords.length}`;
     prevRecordBtn.disabled = index === 0;
     nextRecordBtn.disabled = index >= loadedRecords.length - 1;
 
-    renderLetterText(currentRecord.text, []);
-    highlightEnabled = true;
-    highlightToggle.classList.add('active');
-
-    // Reset entity workspace
-    extractionEmptyState.classList.remove('hide');
-    entitiesWorkspace.classList.add('hide');
-    codingFooter.classList.add('hide');
-    runExtractionBtn.disabled = false;
-    autoApproveBtn.disabled = true;
-    activeEntityDecisions = [];
-
-    if (currentRecord.extracted_entities && currentRecord.extracted_entities.length > 0) {
-        activeEntityDecisions = currentRecord.extracted_entities;
-        showEntitiesWorkspace();
-    }
-
+    pdfViewerIframe.src = `/api/view-pdf/${index}`;
     renderRecordsSidebar();
+
+    clinicalLetterText.innerHTML = '<em style="color:var(--text-muted)"><i class="fa-solid fa-spinner fa-spin"></i> Extracting OCR text from PDF document...</em>';
+
+    try {
+        const res = await fetch(`/api/record/${index}`);
+        currentRecord = await res.json();
+
+        renderLetterText(currentRecord.text, []);
+        highlightEnabled = true;
+        highlightToggle.classList.add('active');
+
+        extractionEmptyState.classList.remove('hide');
+        entitiesWorkspace.classList.add('hide');
+        codingFooter.classList.add('hide');
+        runExtractionBtn.disabled = false;
+        autoApproveBtn.disabled = true;
+        activeEntityDecisions = [];
+
+        if (currentRecord.extracted_entities && currentRecord.extracted_entities.length > 0) {
+            activeEntityDecisions = currentRecord.extracted_entities;
+            showEntitiesWorkspace();
+        }
+    } catch(e) {
+        console.error('Failed to load record details:', e);
+        clinicalLetterText.innerHTML = '<em style="color:var(--danger)">Failed to fetch OCR text for this record.</em>';
+    }
 }
 
 function renderLetterText(text, highlights) {
     if (!text) {
-        clinicalLetterText.innerHTML = '<em style="color:var(--text-muted)">No text content in this record.</em>';
+        clinicalLetterText.innerHTML = '<em style="color:var(--text-muted)">Extracting OCR text from PDF document...</em>';
         return;
     }
     if (!highlightEnabled || !highlights.length) {
@@ -273,7 +279,7 @@ function refreshHighlights() {
 
 // ── Extraction ────────────────────────────────────────────────────────────────
 async function runExtraction() {
-    runExtractionBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Running 3-Model Ensemble...';
+    runExtractionBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Running Qwen SLMS Extraction...';
     runExtractionBtn.disabled = true;
     try {
         const res = await fetch(`/api/extract/${currentRecordIndex}?force=true`, { method: 'POST' });
@@ -284,10 +290,10 @@ async function runExtraction() {
                 loadedRecords[currentRecordIndex].has_extractions = true;
             }
             showEntitiesWorkspace();
-            showToast('Extraction Complete', `Extracted ${data.entities.length} entities via 3-Model Consensus.`, 'success');
+            showToast('Extraction Complete', `Extracted ${data.entities.length} entities with confidence status & SNOMED CT.`, 'success');
         }
     } catch(e) {
-        showToast('Error', 'Ensemble extraction failed.', 'danger');
+        showToast('Error', 'Entity extraction failed.', 'danger');
     } finally {
         runExtractionBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Run Entity Extraction';
         runExtractionBtn.disabled = false;
@@ -328,8 +334,21 @@ function renderEntityCards() {
 
 function buildEntityCard(ent) {
     const confVal = ent.confidence !== undefined ? parseFloat(ent.confidence) : 0.95;
-    const confCls = confVal >= 0.80 ? 'confidence-high' : (confVal >= 0.60 ? 'confidence-medium' : 'confidence-low');
-    const confIcon = confVal >= 0.80 ? 'fa-check-double' : (confVal >= 0.60 ? 'fa-check' : 'fa-question');
+
+    let confCls = 'confidence-low'; // RED (>70%)
+    let confIcon = 'fa-circle-exclamation';
+    let confLabel = '1 Model (>70%)';
+
+    if (confVal >= 0.90) {
+        confCls = 'confidence-high'; // GREEN (>90%)
+        confIcon = 'fa-check-double';
+        confLabel = '3 Models (>90%)';
+    } else if (confVal >= 0.80) {
+        confCls = 'confidence-medium'; // ORANGE (>80%)
+        confIcon = 'fa-check';
+        confLabel = '2 Models (>80%)';
+    }
+
     const pct = Math.round(confVal * 100);
 
     const needsSnomed = ['Diagnosis', 'Symptom', 'Procedure'].includes(ent.category);
@@ -342,7 +361,7 @@ function buildEntityCard(ent) {
                     value="${escapeHtml(ent.snomed || '')}"
                     onchange="updateEntityField('${ent.id}', 'snomed', this.value)">
                 <button class="btn btn-xs btn-outline" onclick="openSnomedSearch('${ent.id}', '${ent.category}')">
-                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <i class="fa-solid fa-magnifying-glass"></i> Search
                 </button>
             </div>
         </div>` : '';
@@ -358,10 +377,10 @@ function buildEntityCard(ent) {
                     onchange="updateEntityField('${ent.id}', 'text', this.value)">
                 <div class="entity-meta-row">
                     <span class="cat-badge cat-badge-${ent.category}">${ent.category}</span>
-                    <span class="confidence-gauge ${confCls}">
-                        <i class="fa-solid ${confIcon}"></i> ${pct}%
+                    <span class="confidence-gauge ${confCls}" title="${confLabel}">
+                        <i class="fa-solid ${confIcon}"></i> ${pct}% Confidence
                     </span>
-                    <span class="status-pill" style="font-size:10px;background:rgba(15,23,42,0.05);padding:2px 6px;border-radius:3px;">${escapeHtml(ent.validation_status || '')}</span>
+                    <span class="status-pill" style="font-size:11px;background:rgba(15,23,42,0.05);padding:3px 8px;border-radius:4px;font-weight:600;color:#475569;">${escapeHtml(ent.validation_status || 'Validated')}</span>
                 </div>
             </div>
         </div>
@@ -457,12 +476,11 @@ function autoApproveHighConfidence() {
 
 // ── Classify & SNOMED ─────────────────────────────────────────────────────────
 async function runClassifySnomed() {
-    classifySnomedBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving & Mapping...';
+    classifySnomedBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mapping SNOMED...';
     classifySnomedBtn.disabled = true;
     try {
         const payload = {
             row_index: currentRecordIndex,
-            clinical_text: currentRecord.text,
             decisions: activeEntityDecisions
         };
         const res = await fetch('/api/process-row', {
@@ -483,7 +501,7 @@ async function runClassifySnomed() {
                 loadedRecords[currentRecordIndex].reviewed = true;
             }
             renderRecordsSidebar();
-            showToast('Mapped', 'SNOMED codes fetched and saved.', 'success');
+            showToast('Mapped', 'SNOMED codes mapped and saved for this PDF.', 'success');
         }
     } catch(e) {
         showToast('Error', 'Classification/SNOMED mapping failed.', 'danger');
@@ -500,7 +518,6 @@ async function saveAndNext() {
     try {
         const payload = {
             row_index: currentRecordIndex,
-            clinical_text: currentRecord.text,
             decisions: activeEntityDecisions
         };
         const res = await fetch('/api/process-row', {
@@ -512,15 +529,15 @@ async function saveAndNext() {
         if (data.success) {
             if (loadedRecords[currentRecordIndex]) loadedRecords[currentRecordIndex].reviewed = true;
             renderRecordsSidebar();
-            showToast('Saved', `Record #${currentRecordIndex + 1} saved.`, 'success');
+            showToast('Saved', `PDF record #${currentRecordIndex + 1} saved.`, 'success');
             if (currentRecordIndex < loadedRecords.length - 1) {
                 setTimeout(() => loadRecord(currentRecordIndex + 1), 400);
             }
         }
     } catch(e) {
-        showToast('Error', 'Failed to save.', 'danger');
+        showToast('Error', 'Failed to save record.', 'danger');
     } finally {
-        saveRowBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save & Next';
+        saveRowBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save &amp; Next PDF';
         saveRowBtn.disabled = false;
     }
 }
@@ -575,7 +592,7 @@ async function searchSnomedTerm() {
         snomedResultsContainer.innerHTML = '<div class="snomed-empty-msg" style="color:var(--danger)">Enter at least 2 characters.</div>';
         return;
     }
-    snomedResultsContainer.innerHTML = '<div class="snomed-empty-msg"><i class="fa-solid fa-spinner fa-spin"></i> Querying FHIR servers...</div>';
+    snomedResultsContainer.innerHTML = '<div class="snomed-empty-msg"><i class="fa-solid fa-spinner fa-spin"></i> Searching SNOMED CT...</div>';
     try {
         const category = snomedModalCategory.textContent;
         const res = await fetch(`/api/snomed-search?term=${encodeURIComponent(term)}&category=${encodeURIComponent(category)}`);
@@ -599,7 +616,7 @@ async function searchSnomedTerm() {
             snomedResultsContainer.innerHTML = `<div class="snomed-empty-msg">No concepts found for "${escapeHtml(term)}".</div>`;
         }
     } catch(e) {
-        snomedResultsContainer.innerHTML = '<div class="snomed-empty-msg" style="color:var(--danger)">Error querying FHIR server.</div>';
+        snomedResultsContainer.innerHTML = '<div class="snomed-empty-msg" style="color:var(--danger)">Error querying SNOMED CT server.</div>';
     }
 }
 

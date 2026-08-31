@@ -1,0 +1,54 @@
+{
+  "vitals": [
+    {
+      "source_file": "letter_087_bp_readings.pdf",
+      "text_in_letter": "148/102",
+      "category": "vitals",
+      "context": "abnormal",
+      "evidence_sentence": "25.06.26 am 148/102 pm 152/103",
+      "value": "148",
+      "unit": "/102",
+      "needs_review": false
+    },
+    {
+      "source_file": "letter_087_bp_readings.pdf",
+      "text_in_letter": "146/102",
+      "category": "vitals",
+      "context": "abnormal",
+      "evidence_sentence": "26.06.26 am 146/102 pm 144/102",
+      "value": "146",
+      "unit": "/102",
+      "needs_review": false
+    },
+    {
+      "source_file": "letter_087_bp_readings.pdf",
+      "text_in_letter": "154/101",
+      "category": "vitals",
+      "context": "abnormal",
+      "evidence_sentence": "27.06.26 am 154/101 pm 146/99",
+      "value": "154",
+      "unit": "/101",
+      "needs_review": false
+    },
+    {
+      "source_file": "letter_087_bp_readings.pdf",
+      "text_in_letter": "148/97",
+      "category": "vitals",
+      "context": "abnormal",
+      "evidence_sentence": "28.06.26 am 148/97 pm 149/95",
+      "value": "148",
+      "unit": "/97",
+      "needs_review": false
+    },
+    {
+      "source_file": "letter_087_bp_readings.pdf",
+      "text_in_letter": "148/95",
+      "category": "vitals",
+      "context": "abnormal",
+      "evidence_sentence": "30.06.26 am 148/95 pm 156/96",
+      "value": "148",
+      "unit": "/95",
+      "needs_review": false
+    }
+  ]
+}

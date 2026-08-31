@@ -1,0 +1,111 @@
+{
+  "letter_042_physio.pdf": {
+    "letter_type": "Other",
+    "diagnoses": [
+      {
+        "entity": "chronic low back pain",
+        "status": "Current",
+        "snomed": "278860009 | Chronic lower back pain"
+      }
+    ],
+    "symptoms": [
+      {
+        "entity": "nocturnal pain",
+        "status": "Current",
+        "snomed": "Not found"
+      }
+    ],
+    "procedures": [],
+    "medications": [],
+    "vitals": []
+  },
+  "letter_056_dna.pdf": {
+    "letter_type": "DNA",
+    "diagnoses": [],
+    "symptoms": [],
+    "procedures": [],
+    "medications": [],
+    "vitals": []
+  },
+  "letter_077_private_rx.pdf": {
+    "letter_type": "Other",
+    "diagnoses": [],
+    "symptoms": [],
+    "procedures": [],
+    "medications": [
+      {
+        "entity": "Mounjaro® Injection 2.5 mg",
+        "status": "Started"
+      }
+    ],
+    "vitals": [
+      {
+        "entity": "BMI 38.82",
+        "value": "BMI 38.82 (height 170 cm; weight 112.2 kg)"
+      },
+      {
+        "entity": "height 170 cm",
+        "value": "BMI 38.82 (height 170 cm; weight 112.2 kg)"
+      },
+      {
+        "entity": "weight 112.2 kg",
+        "value": "BMI 38.82 (height 170 cm; weight 112.2 kg)"
+      }
+    ]
+  },
+  "letter_084_discharge.pdf": {
+    "letter_type": "A&E Discharge Summary",
+    "diagnoses": [
+      {
+        "entity": "Urinary tract infection with delirium",
+        "status": "Current",
+        "snomed": "68566005 | Urinary tract infection"
+      }
+    ],
+    "symptoms": [],
+    "procedures": [],
+    "medications": [],
+    "vitals": []
+  },
+  "letter_087_bp_readings.pdf": {
+    "letter_type": "Other",
+    "diagnoses": [],
+    "symptoms": [],
+    "procedures": [],
+    "medications": [],
+    "vitals": [
+      {
+        "entity": "147/97",
+        "value": "147/97"
+      },
+      {
+        "entity": "148/102",
+        "value": "148/102"
+      },
+      {
+        "entity": "146/102",
+        "value": "146/102"
+      },
+      {
+        "entity": "154/101",
+        "value": "154/101"
+      },
+      {
+        "entity": "148/97",
+        "value": "148/97"
+      },
+      {
+        "entity": "154/101",
+        "value": "154/101"
+      },
+      {
+        "entity": "148/95",
+        "value": "148/95"
+      },
+      {
+        "entity": "150/99",
+        "value": "150/99"
+      }
+    ]
+  }
+}

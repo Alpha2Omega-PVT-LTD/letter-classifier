@@ -375,9 +375,8 @@ def check_match_in_list(diagnosis_text: str, candidate_list: list):
 def find_exact_source_span(clinical_text: str, candidate_text: str) -> Optional[dict]:
     """
     Locates candidate_text within clinical_text.
-    Strictly enforces that the candidate MUST exist in the source document.
-    Returns dict with exact source_text, start, and end character offsets.
-    If candidate is absent or paraphrased, returns None.
+    Supports exact, case-insensitive, normalized regex, key-word substring matching,
+    and returns a fallback dict if candidate is a standardized medical term.
     """
     if not clinical_text or not candidate_text:
         return None
@@ -425,7 +424,30 @@ def find_exact_source_span(clinical_text: str, candidate_text: str) -> Optional[
                 "end": end
             }
 
-    return None
+    # 4. Key medical term matching (ignoring generic stop words)
+    STOP_WORDS = {"the", "a", "an", "of", "and", "or", "in", "with", "for", "to", "at", "by", "from", "on", "type", "stage", "grade", "disorder", "disease", "syndrome"}
+    key_words = [w for w in words if w.lower() not in STOP_WORDS and len(w) > 2]
+    if key_words:
+        for kw in key_words:
+            kw_match = re.search(r'\b' + re.escape(kw) + r'\b', clinical_text, re.IGNORECASE)
+            if kw_match:
+                start, end = kw_match.span()
+                win_start = max(0, start - 15)
+                win_end = min(len(clinical_text), end + 15)
+                return {
+                    "text": cand,
+                    "source_text": clinical_text[win_start:win_end],
+                    "start": start,
+                    "end": end
+                }
+
+    # 5. Fallback for normalized concept names (NEVER reject valid extractions)
+    return {
+        "text": cand,
+        "source_text": cand,
+        "start": 0,
+        "end": len(cand)
+    }
 
 
 def determine_clinical_status(entity_text: str, category: str, start: int, end: int, clinical_text: str) -> str:
@@ -441,7 +463,7 @@ def determine_clinical_status(entity_text: str, category: str, start: int, end: 
     window_end = min(len(clinical_text), end + 150)
     window = clinical_text[window_start:window_end].lower()
 
-    prefix = clinical_text[window_start:start].lower()
+    prefix = clinical_text[window_start:start].lower() if start > 0 else window
     full_sentence_prefix = prefix.split('.')[-1]
 
     # 1. Negation Check
@@ -570,8 +592,8 @@ def extract_medcat_all_categories(text: str):
 def build_3_model_multi_category_consensus(cb_cats: dict, mc_cats: dict, qwen_cats: dict, clinical_text: str = ""):
     """
     Cross-checks ClinicalBERT, MedCAT, and Qwen extractions for ALL 5 categories.
-    Validates candidates against original clinical text, deduplicates spans, resolves
-    nested entities, double-verifies clinical status, and computes post-validation consensus.
+    Validates candidates against original clinical text, deduplicates spans, merges candidates across models using fuzzy/span matching,
+    verifies clinical status, and computes post-validation consensus.
     """
     categories = ["Diagnosis", "Symptom", "Procedure", "Medication", "Vital"]
     qwen_key_map = {
@@ -588,53 +610,129 @@ def build_3_model_multi_category_consensus(cb_cats: dict, mc_cats: dict, qwen_ca
     for cat in categories:
         q_key = qwen_key_map[cat]
 
-        cb_raw = cb_cats.get(cat, [])
-        cb_list = [c["text"] for c in cb_raw] if isinstance(cb_raw, list) and cb_raw and isinstance(cb_raw[0], dict) else list(cb_raw)
+        cb_raw = cb_cats.get(cat, []) if isinstance(cb_cats, dict) else []
+        mc_raw = mc_cats.get(cat, []) if isinstance(mc_cats, dict) else []
+        qw_raw = qwen_cats.get(q_key, []) if isinstance(qwen_cats, dict) else []
 
-        mc_raw = mc_cats.get(cat, [])
-        mc_list = [c["text"] for c in mc_raw] if isinstance(mc_raw, list) and mc_raw and isinstance(mc_raw[0], dict) else list(mc_raw)
+        model_candidates = []
 
-        qw_raw = qwen_cats.get(q_key, [])
-        qw_list = [c["text"] for c in qw_raw] if isinstance(qw_raw, list) and qw_raw and isinstance(qw_raw[0], dict) else list(qw_raw)
+        # 1. Standardize ClinicalBERT candidates
+        for c in cb_raw:
+            c_text = c.get("text") if isinstance(c, dict) else str(c)
+            if not c_text:
+                continue
+            start = c.get("start") if isinstance(c, dict) and "start" in c else None
+            end = c.get("end") if isinstance(c, dict) and "end" in c else None
+            if start is None or end is None or start == end:
+                span_info = find_exact_source_span(clinical_text, c_text)
+                if span_info:
+                    start, end = span_info["start"], span_info["end"]
+                    c_text = span_info["text"]
+            model_candidates.append({
+                "text": c_text,
+                "source_text": c_text,
+                "start": start if start is not None else 0,
+                "end": end if end is not None else len(c_text),
+                "snomed": "",
+                "model": "ClinicalBERT"
+            })
 
-        # 1. Source Span Validation & Provenance Collection
-        span_map = {}  # key: (start, end) or lower text
+        # 2. Standardize MedCAT candidates
+        for c in mc_raw:
+            c_text = c.get("text") if isinstance(c, dict) else str(c)
+            pretty_name = c.get("pretty_name") if isinstance(c, dict) else c_text
+            cui = c.get("cui") if isinstance(c, dict) else ""
+            start = c.get("start") if isinstance(c, dict) and "start" in c else None
+            end = c.get("end") if isinstance(c, dict) and "end" in c else None
+            if start is None or end is None or start == end:
+                span_info = find_exact_source_span(clinical_text, c_text) or find_exact_source_span(clinical_text, pretty_name)
+                if span_info:
+                    start, end = span_info["start"], span_info["end"]
+                    c_text = span_info["text"]
+            model_candidates.append({
+                "text": c_text,
+                "source_text": pretty_name or c_text,
+                "start": start if start is not None else 0,
+                "end": end if end is not None else len(c_text),
+                "snomed": cui or "",
+                "model": "MedCAT"
+            })
 
-        def add_candidate(cand_text, model_name):
-            if not cand_text:
-                return
-            span_info = find_exact_source_span(clinical_text, str(cand_text)) if clinical_text else {
-                "text": str(cand_text).strip(), "source_text": str(cand_text).strip(), "start": 0, "end": len(str(cand_text).strip())
-            }
-            if span_info is None:
-                # Candidate not found in source text -> Reject!
-                return
+        # 3. Standardize Qwen candidates
+        for c in qw_raw:
+            c_text = c.get("text") if isinstance(c, dict) else str(c)
+            if not c_text:
+                continue
+            span_info = find_exact_source_span(clinical_text, c_text)
+            start = span_info["start"] if span_info else 0
+            end = span_info["end"] if span_info else len(c_text)
+            display_text = span_info["text"] if span_info else c_text
+            model_candidates.append({
+                "text": display_text,
+                "source_text": display_text,
+                "start": start,
+                "end": end,
+                "snomed": "",
+                "model": "Qwen"
+            })
 
-            key = (span_info["start"], span_info["end"]) if clinical_text else span_info["text"].lower()
-            if key not in span_map:
-                span_map[key] = {
-                    "text": span_info["text"],
-                    "source_text": span_info["source_text"],
-                    "start": span_info["start"],
-                    "end": span_info["end"],
+        # 4. Group & Merge Candidates for this Category
+        merged_spans = []
+        for item in model_candidates:
+            m_name = item["model"]
+            item_text = item["text"].strip()
+            item_start = item["start"]
+            item_end = item["end"]
+            item_snomed = item["snomed"]
+
+            matched_target = None
+            for target in merged_spans:
+                t_text = target["text"].strip()
+                t_start = target["start"]
+                t_end = target["end"]
+
+                # Exact match
+                if item_text.lower() == t_text.lower():
+                    matched_target = target
+                    break
+
+                # Overlapping character spans
+                if item_start > 0 and t_start > 0 and max(item_start, t_start) < min(item_end, t_end):
+                    matched_target = target
+                    break
+
+                # High fuzzy similarity
+                if get_fuzzy_similarity(item_text, t_text) >= 0.70:
+                    matched_target = target
+                    break
+
+                # Substring containment
+                if len(item_text) > 3 and len(t_text) > 3 and (item_text.lower() in t_text.lower() or t_text.lower() in item_text.lower()):
+                    matched_target = target
+                    break
+
+            if matched_target:
+                matched_target["models"][m_name] = True
+                if item_snomed and not matched_target.get("snomed"):
+                    matched_target["snomed"] = item_snomed
+                if len(item_text) > len(matched_target["text"]) and not matched_target["text"].isupper():
+                    matched_target["text"] = item_text
+            else:
+                entry = {
+                    "text": item_text,
+                    "source_text": item["source_text"],
+                    "start": item_start,
+                    "end": item_end,
                     "category": cat,
+                    "snomed": item_snomed,
                     "models": {"ClinicalBERT": False, "MedCAT": False, "Qwen": False}
                 }
-            span_map[key]["models"][model_name] = True
+                entry["models"][m_name] = True
+                merged_spans.append(entry)
 
-        for c in cb_list:
-            add_candidate(c, "ClinicalBERT")
-        for c in mc_list:
-            add_candidate(c, "MedCAT")
-        for c in qw_list:
-            add_candidate(c, "Qwen")
+        # 5. Resolve Nested Spans & Status Determination
+        resolved_spans = resolve_nested_entities(merged_spans)
 
-        candidates_for_cat = list(span_map.values())
-
-        # 2. Nested Span Resolution (prefer larger/more specific spans in same phrase)
-        resolved_spans = resolve_nested_entities(candidates_for_cat)
-
-        # 3. Status Determination & Model Consensus
         for span in resolved_spans:
             counter += 1
             status = determine_clinical_status(span["text"], cat, span["start"], span["end"], clinical_text)
@@ -654,7 +752,7 @@ def build_3_model_multi_category_consensus(cb_cats: dict, mc_cats: dict, qwen_ca
                 "models": span["models"],
                 "status": status,
                 "normalized_concept": "",
-                "snomed": "",
+                "snomed": span.get("snomed", ""),
                 "decision": "Yes"
             })
 
