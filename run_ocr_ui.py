@@ -10,7 +10,7 @@ import threading
 import pandas as pd
 from typing import List, Dict, Any, Optional
 from pathlib import Path
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, BackgroundTasks
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -978,16 +978,17 @@ def process_batch_folder(folder_path: str, force_reextract: bool = False) -> Dic
     }
 
 @app.post("/api/batch-extract")
-def api_batch_extract(force: bool = Query(False)):
+def api_batch_extract(background_tasks: BackgroundTasks, force: bool = Query(False)):
     session = load_session()
     folder_path = session.get("folder_path", "")
     if not folder_path or not os.path.exists(folder_path):
         raise HTTPException(status_code=400, detail="No valid folder loaded. Please load a PDF folder first.")
     
-    result = process_batch_folder(folder_path, force_reextract=force)
-    if not result.get("success"):
-        raise HTTPException(status_code=500, detail=result.get("detail", "Batch extraction failed."))
-    return result
+    background_tasks.add_task(process_batch_folder, folder_path, force_reextract=force)
+    return {
+        "success": True,
+        "message": f"Batch extraction started in background. Terminal log shows live progress."
+    }
 
 @app.get("/api/snomed-search")
 def snomed_search(term: str = Query(..., min_length=2), category: Optional[str] = None):
@@ -1181,7 +1182,7 @@ def main():
 
     try:
         import uvicorn
-        uvicorn.run("run_ocr_ui:app", host="127.0.0.1", port=8000, reload=True, reload_dirs=[BASE_DIR])
+        uvicorn.run("run_ocr_ui:app", host="127.0.0.1", port=8000, reload=False)
     except KeyboardInterrupt:
         print("\nStopping Web UI server. Goodbye!")
     except Exception as e:

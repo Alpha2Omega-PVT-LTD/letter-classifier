@@ -5,6 +5,7 @@
 // ── DOM Refs ─────────────────────────────────────────────────────────────────
 const folderPathInput    = document.getElementById('folder-path-input');
 const loadFolderBtn      = document.getElementById('load-folder-btn');
+const batchExtractBtn    = document.getElementById('batch-extract-btn');
 const recordsList        = document.getElementById('records-list');
 const reviewedCountEl    = document.getElementById('reviewed-count');
 
@@ -111,26 +112,27 @@ function attachEventListeners() {
 async function onBatchExtract() {
     if (!confirm('Run automated 3-model extraction across ALL letters in this folder?')) return;
     if (batchExtractBtn) {
-        batchExtractBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Running Batch Extraction...';
+        batchExtractBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Batch Extraction Started...';
         batchExtractBtn.disabled = true;
     }
-    showToast('Batch Extraction Started', 'Processing all PDF letters automatically...', 'info');
+    showToast('Batch Extraction Started ⚡', 'Processing all PDF letters in background...', 'info');
     try {
         const res = await fetch('/api/batch-extract', { method: 'POST' });
         const data = await res.json();
         if (data.success) {
-            showToast('Batch Complete ⚡', `Processed ${data.processed_count} letters. Saved to Excel!`, 'success');
-            await onLoadFolder();
+            showToast('Background Task Active', 'Batch extractions running in background. Terminal shows live progress.', 'success');
         } else {
             showToast('Batch Error', data.detail || 'Batch processing failed.', 'danger');
         }
     } catch(e) {
         showToast('Error', 'Batch extraction request failed.', 'danger');
     } finally {
-        if (batchExtractBtn) {
-            batchExtractBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Run Batch Extraction';
-            batchExtractBtn.disabled = false;
-        }
+        setTimeout(() => {
+            if (batchExtractBtn) {
+                batchExtractBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Run Batch Extraction';
+                batchExtractBtn.disabled = false;
+            }
+        }, 3000);
     }
 }
 
