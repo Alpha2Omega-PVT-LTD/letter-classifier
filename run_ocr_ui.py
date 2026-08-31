@@ -358,6 +358,8 @@ async def add_no_cache_header(request, call_next):
 
 SESSION_FILE = os.path.join(BASE_DIR, "pdf_folder_session_progress.json")
 
+EXTRACTION_CACHE_FILE = os.path.join(BASE_DIR, ".letter_extraction_cache.json")
+
 def load_session() -> Dict[str, Any]:
     if os.path.exists(SESSION_FILE):
         try:
@@ -373,6 +375,22 @@ def save_session(session_data: Dict[str, Any]):
             json.dump(session_data, f, indent=2, ensure_ascii=False)
     except Exception as e:
         print(f"[WARN] Failed to save session: {e}")
+
+def load_extraction_cache() -> Dict[str, Any]:
+    if os.path.exists(EXTRACTION_CACHE_FILE):
+        try:
+            with open(EXTRACTION_CACHE_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def save_extraction_cache(cache: Dict[str, Any]):
+    try:
+        with open(EXTRACTION_CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(cache, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"[WARN] Failed to save extraction cache: {e}")
 
 # ─────────────────────────────────────────────────────────
 # Data Models
@@ -524,8 +542,20 @@ def extract_pdf_entities(index: int, force: bool = Query(False)):
         raise HTTPException(status_code=404, detail="Record not found")
 
     rec = records[index]
-    if not force and rec.get("extracted_entities") is not None:
-        return {"entities": rec["extracted_entities"]}
+    fname = rec.get("filename", "")
+    disk_cache = load_extraction_cache()
+
+    if not force:
+        if rec.get("extracted_entities") is not None:
+            return {"entities": rec["extracted_entities"], "cached": True}
+        if fname and fname in disk_cache:
+            cached_entities = disk_cache[fname].get("entities", [])
+            rec["extracted_entities"] = cached_entities
+            rec["has_extractions"] = True
+            session["records"][index] = rec
+            save_session(session)
+            print(f"[DISK CACHE HIT] Loaded cached extractions for '{fname}' instantly.")
+            return {"entities": cached_entities, "cached": True}
 
     clinical_text = rec.get("text", "")
     if not clinical_text or not clinical_text.strip():
@@ -609,6 +639,10 @@ def extract_pdf_entities(index: int, force: bool = Query(False)):
     rec["has_extractions"] = True
     session["records"][index] = rec
     save_session(session)
+
+    if fname:
+        disk_cache[fname] = {"entities": formatted_entities, "updated": str(datetime.datetime.now())}
+        save_extraction_cache(disk_cache)
 
     return {"entities": formatted_entities}
 

@@ -13,7 +13,12 @@ env/
 
 # Data & Output Files
 ensemble_web_session_progress.json
+pdf_folder_session_progress.json
+.session_ocr_pdf_hub.json
+.letter_extraction_cache.json
 *.log
+output/
+final_pipeline/output/
 
 # IDE & System Files
 .vscode/

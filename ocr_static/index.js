@@ -288,7 +288,7 @@ async function runExtraction() {
     runExtractionBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Running Qwen SLMS Extraction...';
     runExtractionBtn.disabled = true;
     try {
-        const res = await fetch(`/api/extract/${currentRecordIndex}?force=true`, { method: 'POST' });
+        const res = await fetch(`/api/extract/${currentRecordIndex}`, { method: 'POST' });
         const data = await res.json();
         if (data.entities !== undefined) {
             activeEntityDecisions = data.entities;
@@ -296,7 +296,10 @@ async function runExtraction() {
                 loadedRecords[currentRecordIndex].has_extractions = true;
             }
             showEntitiesWorkspace();
-            showToast('Extraction Complete', `Extracted ${data.entities.length} entities with confidence status & SNOMED CT.`, 'success');
+            const msg = data.cached
+                ? `Loaded ${data.entities.length} entities from cache instantly!`
+                : `Extracted ${data.entities.length} entities with confidence status & SNOMED CT.`;
+            showToast(data.cached ? 'Loaded from Cache ⚡' : 'Extraction Complete', msg, 'success');
         }
     } catch(e) {
         showToast('Error', 'Entity extraction failed.', 'danger');
