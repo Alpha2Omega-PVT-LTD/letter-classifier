@@ -10,6 +10,10 @@ try:
 except ImportError:
     FITZ_AVAILABLE = False
 
+# Disable PIR compiler & oneDNN executor flags for Paddle 3.x compatibility
+os.environ["FLAGS_enable_pir_api"] = "0"
+os.environ["FLAGS_use_pir_api"] = "0"
+
 # Import PaddleOCR
 try:
     from paddleocr import PaddleOCR
