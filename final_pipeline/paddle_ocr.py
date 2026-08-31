@@ -10,9 +10,12 @@ try:
 except ImportError:
     FITZ_AVAILABLE = False
 
-# Disable PIR compiler & oneDNN executor flags for Paddle 3.x compatibility
+# Disable PIR compiler & oneDNN executor flags for Paddle 3.x compatibility on Windows CPU
 os.environ["FLAGS_enable_pir_api"] = "0"
 os.environ["FLAGS_use_pir_api"] = "0"
+os.environ["FLAGS_enable_pir_in_executor"] = "0"
+os.environ["FLAGS_enable_onednn"] = "0"
+os.environ["FLAGS_use_onednn"] = "0"
 
 # Import PaddleOCR
 try:
@@ -37,14 +40,20 @@ def initialize_paddle_ocr(lang: str = "en") -> Any:
     
     print("Initializing PaddleOCR model...")
     try:
-        ocr = PaddleOCR(lang=lang)
+        ocr = PaddleOCR(lang=lang, enable_mkldnn=False)
     except Exception as e:
-        print(f"Error initializing PaddleOCR with lang={lang}: {e}")
+        print(f"[Info] Retrying PaddleOCR init without MKLDNN: {e}")
         try:
-            ocr = PaddleOCR()
+            ocr = PaddleOCR(lang=lang)
         except Exception as e2:
-            print(f"Error initializing PaddleOCR default: {e2}")
-            return None
+            try:
+                ocr = PaddleOCR(enable_mkldnn=False)
+            except Exception as e3:
+                try:
+                    ocr = PaddleOCR()
+                except Exception as e4:
+                    print(f"Error initializing PaddleOCR: {e4}")
+                    return None
     print("PaddleOCR initialized successfully.")
     return ocr
 
