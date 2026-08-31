@@ -138,13 +138,12 @@ def calculate_consensus_confidence(models_dict: dict):
 
     if n_matches >= 3:
         confidence = 0.98
-        validation_status = "High Consensus — 3/3 models (ClinicalBERT, MedCAT, Qwen)"
+        validation_status = "High Consensus"
     elif n_matches == 2:
-        validation_status = f"Consensus — 2/3 models ({' & '.join(active_models)})"
+        validation_status = "Consensus"
         confidence = 0.85
     else:
-        model_name = active_models[0] if active_models else "Qwen"
-        validation_status = f"Single Model Validated — 1/3 models ({model_name})"
+        validation_status = "Validated"
         confidence = 0.75
 
     return confidence, validation_status, n_matches
