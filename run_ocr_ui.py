@@ -11,7 +11,7 @@ import pandas as pd
 from typing import List, Dict, Any, Optional
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -355,6 +355,12 @@ async def add_no_cache_header(request, call_next):
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
     return response
+
+# Silent handlers for browser background probes
+@app.get("/favicon.ico", include_in_schema=False)
+@app.get("/sw.js", include_in_schema=False)
+def silence_browser_probes():
+    return Response(content="", status_code=204)
 
 SESSION_FILE = os.path.join(BASE_DIR, "pdf_folder_session_progress.json")
 
