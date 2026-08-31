@@ -867,6 +867,177 @@ def extract_pdf_entities(index: int, force: bool = Query(False)):
 
     return {"entities": formatted_entities}
 
+def process_batch_folder(folder_path: str, force_reextract: bool = False) -> Dict[str, Any]:
+    print(f"\n=======================================================")
+    print(f"STARTING AUTOMATED BATCH EXTRACTION")
+    print(f"Folder: {folder_path}")
+    print(f"=======================================================\n")
+    
+    if not os.path.exists(folder_path) or not os.path.isdir(folder_path):
+        return {"success": False, "detail": f"Folder not found: {folder_path}"}
+        
+    pdf_files = sorted([f for f in os.listdir(folder_path) if f.lower().endswith(('.pdf', '.txt'))])
+    if not pdf_files:
+        return {"success": False, "detail": f"No PDF or text letters found in: {folder_path}"}
+        
+    session = load_session()
+    session["folder_path"] = folder_path
+    
+    existing_by_name = {r["filename"]: r for r in session.get("records", [])}
+    records = []
+    for idx, fname in enumerate(pdf_files):
+        fpath = os.path.join(folder_path, fname)
+        if fname in existing_by_name:
+            rec = existing_by_name[fname]
+            rec["index"] = idx
+            rec["file_path"] = fpath
+            records.append(rec)
+        else:
+            records.append({
+                "index": idx,
+                "filename": fname,
+                "file_path": fpath,
+                "text": "",
+                "has_extractions": False,
+                "reviewed": False,
+                "extracted_entities": None,
+                "final_results": None
+            })
+    session["records"] = records
+    save_session(session)
+
+    disk_cache = load_extraction_cache()
+    total = len(pdf_files)
+    processed_count = 0
+
+    for idx in range(total):
+        rec = session["records"][idx]
+        fname = rec["filename"]
+        fpath = rec["file_path"]
+        print(f"\n[{idx+1}/{total}] Processing: {fname}...")
+
+        if not rec.get("text"):
+            if fpath.lower().endswith('.pdf') and PADDLE_AVAILABLE:
+                try:
+                    ocr = get_paddle_ocr()
+                    res = extract_text_from_pdf_paddle(fpath, ocr_instance=ocr)
+                    rec["text"] = res.get("full_text", "")
+                except Exception as e:
+                    print(f"  [WARN] OCR error on {fname}: {e}")
+                    rec["text"] = f"[OCR Error: {e}]"
+            else:
+                try:
+                    with open(fpath, "r", encoding="utf-8", errors="ignore") as f:
+                        rec["text"] = f.read()
+                except Exception as e:
+                    rec["text"] = f"[Error reading file: {e}]"
+
+        clinical_text = rec.get("text", "")
+
+        if not force_reextract and fname in disk_cache:
+            rec["extracted_entities"] = disk_cache[fname].get("entities", [])
+            rec["has_extractions"] = True
+            print(f"  --> Loaded from Cache ({len(rec['extracted_entities'])} entities)")
+        else:
+            print(f"  --> Running 3-Model Extraction (ClinicalBERT, MedCAT, Qwen)...")
+            cb_all = {"Diagnosis": [], "Symptom": [], "Procedure": [], "Medication": [], "Vital": []}
+            if extract_clinicalbert_entities is not None:
+                try:
+                    cb_all = extract_clinicalbert_entities(clinical_text)
+                except Exception as e:
+                    print(f"  [WARN] ClinicalBERT error: {e}")
+
+            mc_all = {"Diagnosis": [], "Symptom": [], "Procedure": [], "Medication": [], "Vital": []}
+            if extract_entities_with_medcat is not None:
+                try:
+                    get_medcat()
+                    mc_all = extract_entities_with_medcat(clinical_text)
+                except Exception as e:
+                    print(f"  [WARN] MedCAT error: {e}")
+
+            qw_all = {"diagnoses": [], "symptoms": [], "procedures": [], "medications": [], "vitals": []}
+            pipeline = get_slms_pipeline()
+            if pipeline:
+                try:
+                    orig_cwd = os.getcwd()
+                    os.chdir(SLMS_DIR)
+                    try:
+                        res_slms = pipeline.process_letter(clinical_text)
+                        qw_all = {
+                            "diagnoses": [i.get("entity", "") if isinstance(i, dict) else str(i) for i in res_slms.get("diagnoses", [])],
+                            "symptoms": [i.get("entity", "") if isinstance(i, dict) else str(i) for i in res_slms.get("symptoms", [])],
+                            "procedures": [i.get("entity", "") if isinstance(i, dict) else str(i) for i in res_slms.get("procedures", [])],
+                            "medications": [i.get("entity", "") if isinstance(i, dict) else str(i) for i in res_slms.get("medications", [])],
+                            "vitals": [i.get("entity", "") if isinstance(i, dict) else str(i) for i in res_slms.get("vitals", [])]
+                        }
+                    finally:
+                        os.chdir(orig_cwd)
+                except Exception as e:
+                    print(f"  [WARN] Qwen SLMS error: {e}")
+
+            formatted_entities = build_3_model_consensus_from_final_pipeline(cb_all, mc_all, qw_all, clinical_text)
+            for idx_ent, ent in enumerate(formatted_entities):
+                ent["id"] = f"E{idx_ent + 1}"
+                if not ent.get("decision"):
+                    ent["decision"] = "Yes"
+
+            rec["extracted_entities"] = formatted_entities
+            rec["has_extractions"] = True
+            disk_cache[fname] = {"entities": formatted_entities, "updated": str(datetime.datetime.now())}
+            save_extraction_cache(disk_cache)
+            print(f"  --> Extraction Complete: {len(formatted_entities)} entities found.")
+
+        session["records"][idx] = rec
+        save_session(session)
+        processed_count += 1
+
+    output_excel = os.path.join(folder_path, "overnight_batch_extraction_results.xlsx")
+    try:
+        rows = []
+        for r in session["records"]:
+            fname = r["filename"]
+            ents = r.get("extracted_entities") or []
+            diags = "; ".join([f"{e['text']} [{e.get('status','Current')}]" for e in ents if e.get("category") == "Diagnosis"])
+            symps = "; ".join([f"{e['text']} [{e.get('status','Current')}]" for e in ents if e.get("category") == "Symptom"])
+            procs = "; ".join([f"{e['text']} [{e.get('status','Performed')}]" for e in ents if e.get("category") == "Procedure"])
+            meds = "; ".join([f"{e['text']} [{e.get('status','Current')}]" for e in ents if e.get("category") == "Medication"])
+            vits = "; ".join([f"{e['text']} [{e.get('status','N/A')}]" for e in ents if e.get("category") == "Vital"])
+            rows.append({
+                "Filename": fname,
+                "Diagnoses": diags,
+                "Symptoms": symps,
+                "Procedures": procs,
+                "Medications": meds,
+                "Vitals": vits,
+                "Total Entities": len(ents)
+            })
+        pd.DataFrame(rows).to_excel(output_excel, index=False)
+        print(f"\n=======================================================")
+        print(f"BATCH PROCESS COMPLETE! Processed {processed_count}/{total} letters.")
+        print(f"Excel Saved: {output_excel}")
+        print(f"=======================================================\n")
+    except Exception as e_excel:
+        print(f"[WARN] Failed to export final Excel: {e_excel}")
+
+    return {
+        "success": True,
+        "processed_count": processed_count,
+        "total_count": total,
+        "excel_path": output_excel
+    }
+
+@app.post("/api/batch-extract")
+def api_batch_extract(force: bool = Query(False)):
+    session = load_session()
+    folder_path = session.get("folder_path", "")
+    if not folder_path or not os.path.exists(folder_path):
+        raise HTTPException(status_code=400, detail="No valid folder loaded. Please load a PDF folder first.")
+    
+    result = process_batch_folder(folder_path, force_reextract=force)
+    if not result.get("success"):
+        raise HTTPException(status_code=500, detail=result.get("detail", "Batch extraction failed."))
+    return result
+
 @app.get("/api/snomed-search")
 def snomed_search(term: str = Query(..., min_length=2), category: Optional[str] = None):
     try:
@@ -1034,6 +1205,16 @@ def read_index():
 # Launcher
 # ─────────────────────────────────────────────────────────
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="NHS PDF Letter Clinical OCR & Coding Platform")
+    parser.add_argument("--batch", type=str, help="Path to PDF folder for automated overnight batch extraction")
+    parser.add_argument("--force", action="store_true", help="Force re-extraction of cached letters during batch run")
+    args = parser.parse_args()
+
+    if args.batch:
+        process_batch_folder(args.batch, force_reextract=args.force)
+        return
+
     print("=" * 70)
     print(" NHS PDF Letter Clinical Extraction & Coding Platform Web UI")
     print("=" * 70)

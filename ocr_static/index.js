@@ -79,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function attachEventListeners() {
     if (loadFolderBtn) loadFolderBtn.addEventListener('click', onLoadFolder);
+    if (batchExtractBtn) batchExtractBtn.addEventListener('click', onBatchExtract);
     prevRecordBtn.addEventListener('click', () => navigateRecord(-1));
     nextRecordBtn.addEventListener('click', () => navigateRecord(1));
     runExtractionBtn.addEventListener('click', runExtraction);
@@ -105,6 +106,33 @@ function attachEventListeners() {
     snomedSearchSubmit.addEventListener('click', searchSnomedTerm);
     snomedSearchInput.addEventListener('keydown', e => { if (e.key === 'Enter') searchSnomedTerm(); });
     snomedModal.addEventListener('click', e => { if (e.target === snomedModal) closeSnomedModal(); });
+}
+
+// ── Batch Extraction ──────────────────────────────────────────────────────────
+async function onBatchExtract() {
+    if (!confirm('Run automated 3-model extraction across ALL letters in this folder overnight?')) return;
+    if (batchExtractBtn) {
+        batchExtractBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Running Overnight Batch...';
+        batchExtractBtn.disabled = true;
+    }
+    showToast('Overnight Batch Started', 'Processing all PDF letters automatically...', 'info');
+    try {
+        const res = await fetch('/api/batch-extract', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            showToast('Batch Complete ⚡', `Processed ${data.processed_count} letters overnight. Saved to Excel!`, 'success');
+            await onLoadFolder();
+        } else {
+            showToast('Batch Error', data.detail || 'Batch processing failed.', 'danger');
+        }
+    } catch(e) {
+        showToast('Error', 'Batch extraction request failed.', 'danger');
+    } finally {
+        if (batchExtractBtn) {
+            batchExtractBtn.innerHTML = '<i class="fa-solid fa-bolt"></i> Batch Extract All (Overnight)';
+            batchExtractBtn.disabled = false;
+        }
+    }
 }
 
 // ── View Mode Switcher ────────────────────────────────────────────────────────
@@ -162,6 +190,7 @@ async function onLoadFolder() {
             currentRecordIndex = data.current_index || 0;
             renderRecordsSidebar();
             exportBtn.disabled = false;
+            if (batchExtractBtn) batchExtractBtn.disabled = false;
             loadRecord(currentRecordIndex);
             showToast('Folder Loaded', `Found ${data.total_records} PDF letters.`, 'success');
         } else {
