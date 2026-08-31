@@ -241,7 +241,7 @@ def analyze_entity_context(entity_text: str, sentence_context: str, category: st
     # 5. Planned / Recommended (especially for Procedures)
     plan_kws = ['referred for', 'recommended', 'planned', 'awaiting', 'will arrange', 'referral to', 'referred to']
     if any(k in s_lower for k in plan_kws):
-        return "Planned/Recommended"
+        return "Recommended" if category in ["Procedure", "Medication"] else "Planned"
 
     # Default statuses by category
     if category == "Procedure":
@@ -249,6 +249,66 @@ def analyze_entity_context(entity_text: str, sentence_context: str, category: st
     elif category == "Vital":
         return "N/A"
     return "Current"
+
+
+VALID_UI_STATUSES = {
+    "Diagnosis": ["Current", "Historical", "Negated", "Resolved", "Suspected"],
+    "Symptom": ["Current", "Historical", "Negated", "Resolved", "Warning", "Side Effects"],
+    "Procedure": ["Performed", "Planned", "Recommended", "Monitoring"],
+    "Medication": ["Current", "Started", "Stopped", "Changed", "Recommended"],
+    "Vital": ["N/A"]
+}
+
+STATUS_MAPPING = {
+    "planned/recommended": {"Procedure": "Recommended", "Medication": "Recommended", "default": "Planned"},
+    "planned": {"Procedure": "Planned", "default": "Planned"},
+    "recommended": {"Procedure": "Recommended", "Medication": "Recommended", "default": "Recommended"},
+    "family history": {"default": "Historical"},
+    "past": {"default": "Historical"},
+    "previous": {"default": "Historical"},
+    "prior": {"default": "Historical"},
+    "rule out": {"default": "Suspected"},
+    "possible": {"default": "Suspected"},
+    "side effect": {"default": "Side Effects"},
+    "side-effects": {"default": "Side Effects"},
+    "active": {"default": "Current"},
+    "discontinued": {"Medication": "Stopped", "default": "Stopped"}
+}
+
+def normalize_status_for_category(status_raw: str, category: str) -> str:
+    valid_options = VALID_UI_STATUSES.get(category, ["Current"])
+    if not status_raw:
+        return valid_options[0]
+
+    for opt in valid_options:
+        if opt.lower() == status_raw.lower():
+            return opt
+
+    s_lower = status_raw.lower().strip()
+    if s_lower in STATUS_MAPPING:
+        mapping = STATUS_MAPPING[s_lower]
+        target = mapping.get(category, mapping.get("default"))
+        if target in valid_options:
+            return target
+
+    if "plan" in s_lower:
+        return "Planned" if "Planned" in valid_options else valid_options[0]
+    if "recom" in s_lower:
+        return "Recommended" if "Recommended" in valid_options else valid_options[0]
+    if "hist" in s_lower or "past" in s_lower:
+        return "Historical" if "Historical" in valid_options else valid_options[0]
+    if "suspect" in s_lower or "possible" in s_lower or "query" in s_lower:
+        return "Suspected" if "Suspected" in valid_options else valid_options[0]
+    if "negat" in s_lower or "deni" in s_lower or "no " in s_lower:
+        return "Negated" if "Negated" in valid_options else valid_options[0]
+    if "stop" in s_lower or "cease" in s_lower:
+        return "Stopped" if "Stopped" in valid_options else valid_options[0]
+    if "side" in s_lower:
+        return "Side Effects" if "Side Effects" in valid_options else valid_options[0]
+    if "warn" in s_lower:
+        return "Warning" if "Warning" in valid_options else valid_options[0]
+
+    return valid_options[0]
 
 
 def validate_and_correct_category(entity_text: str, candidate_categories: List[str]) -> str:
@@ -406,8 +466,9 @@ def build_3_model_consensus_from_final_pipeline(cb_cats: dict, mc_cats: dict, qw
         for cat, items in cb_cats.items():
             for item in items:
                 t = item.get("text") if isinstance(item, dict) else str(item)
+                st = item.get("status", "") if isinstance(item, dict) else ""
                 if t and t.strip():
-                    raw_candidates.append({"text": t.strip(), "cat": cat, "snomed": "", "model": "ClinicalBERT"})
+                    raw_candidates.append({"text": t.strip(), "cat": cat, "snomed": "", "status": st, "model": "ClinicalBERT"})
 
     # 2. Collect MedCAT candidates
     if isinstance(mc_cats, dict):
@@ -415,8 +476,9 @@ def build_3_model_consensus_from_final_pipeline(cb_cats: dict, mc_cats: dict, qw
             for item in items:
                 t = item.get("text") if isinstance(item, dict) else str(item)
                 cui = item.get("cui") if isinstance(item, dict) else ""
+                st = item.get("status", "") if isinstance(item, dict) else ""
                 if t and t.strip():
-                    raw_candidates.append({"text": t.strip(), "cat": cat, "snomed": cui or "", "model": "MedCAT"})
+                    raw_candidates.append({"text": t.strip(), "cat": cat, "snomed": cui or "", "status": st, "model": "MedCAT"})
 
     # 3. Collect Qwen candidates
     qw_key_map = {"Diagnosis": "diagnoses", "Symptom": "symptoms", "Procedure": "procedures", "Medication": "medications", "Vital": "vitals"}
@@ -426,10 +488,11 @@ def build_3_model_consensus_from_final_pipeline(cb_cats: dict, mc_cats: dict, qw
             for item in items:
                 t = item.get("entity", "") if isinstance(item, dict) else (item.get("text", "") if isinstance(item, dict) else str(item))
                 snomed_val = item.get("snomed", "") if isinstance(item, dict) else ""
+                st = item.get("status", "") if isinstance(item, dict) else ""
                 if snomed_val == "Not found":
                     snomed_val = ""
                 if t and t.strip():
-                    raw_candidates.append({"text": t.strip(), "cat": cat, "snomed": snomed_val, "model": "Qwen"})
+                    raw_candidates.append({"text": t.strip(), "cat": cat, "snomed": snomed_val, "status": st, "model": "Qwen"})
 
     # 4. Global Candidate Consolidation & Deduplication
     merged_pool = []
@@ -438,6 +501,7 @@ def build_3_model_consensus_from_final_pipeline(cb_cats: dict, mc_cats: dict, qw
         m_name = cand["model"]
         c_cat = cand["cat"]
         c_snomed = cand["snomed"]
+        c_status = cand.get("status", "")
 
         matched = None
         for target in merged_pool:
@@ -461,6 +525,8 @@ def build_3_model_consensus_from_final_pipeline(cb_cats: dict, mc_cats: dict, qw
             matched["categories"].append(c_cat)
             if c_snomed and not matched.get("snomed"):
                 matched["snomed"] = c_snomed
+            if c_status and not matched.get("status"):
+                matched["status"] = c_status
             if len(c_text) > len(matched["text"]) and c_text.lower() in clinical_text.lower():
                 matched["text"] = c_text
         else:
@@ -468,6 +534,7 @@ def build_3_model_consensus_from_final_pipeline(cb_cats: dict, mc_cats: dict, qw
                 "text": c_text,
                 "categories": [c_cat],
                 "snomed": c_snomed,
+                "status": c_status,
                 "models": {"ClinicalBERT": False, "MedCAT": False, "Qwen": False}
             })
             merged_pool[-1]["models"][m_name] = True
@@ -492,7 +559,10 @@ def build_3_model_consensus_from_final_pipeline(cb_cats: dict, mc_cats: dict, qw
         validated_category = validate_and_correct_category(ent_text, item["categories"])
 
         # Step 5c: Context & Status Analysis
-        status_val = analyze_entity_context(ent_text, sentence_context, validated_category)
+        raw_st = item.get("status", "")
+        if not raw_st or raw_st == "N/A":
+            raw_st = analyze_entity_context(ent_text, sentence_context, validated_category)
+        status_val = normalize_status_for_category(raw_st, validated_category)
 
         # Step 5d: Model Consensus Confidence
         confidence, validation_status, n_matches = calculate_consensus_confidence(item["models"])

@@ -69,5 +69,16 @@
   "procedure::Historical::the medication": "Not found",
   "procedure::Performed::his liver function tests": "Not found",
   "procedure::Performed::ace inhibitors": "Not found",
-  "procedure::Performed::panel testing": "Not found"
+  "procedure::Performed::panel testing": "Not found",
+  "Symptom::Warning::chest pain": "29857009 | Chest pain",
+  "Symptom::Warning::shortness of breath": "Not found",
+  "Symptom::Warning::blurred vision": "1168921000168107 | Blurred vision",
+  "Symptom::Warning::severe headache": "Not found",
+  "Symptom::Warning::confusion": "40917007 | Confusion",
+  "Symptom::Warning::muscle weakness": "26544005 | Muscle weakness",
+  "Symptom::Warning::dark urine": "720001001 | Dark yellow urine",
+  "Diagnosis::Current::angioedema": "41291007 | Angioedema",
+  "Symptom::Warning::swelling of the face or tongue": "Not found",
+  "Symptom::Current::difficulty breathing": "230145002 | Difficulty breathing",
+  "symptom::Current::swelling of the face or tongue": "Not found"
 }

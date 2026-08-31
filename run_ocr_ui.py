@@ -215,117 +215,283 @@ JSON OUTPUT FORMAT (Return ONLY a JSON array):
         return merged_pool
 
 
-def build_3_model_consensus_from_final_pipeline(cb_cats: dict, mc_cats: dict, qw_cats: dict, clinical_text: str = ""):
-    categories = ["Diagnosis", "Symptom", "Procedure", "Medication", "Vital"]
-    qw_key_map = {
-        "Diagnosis": "diagnoses",
-        "Symptom": "symptoms",
-        "Procedure": "procedures",
-        "Medication": "medications",
-        "Vital": "vitals"
-    }
+def check_ocr_evidence(entity_text: str, clinical_text: str) -> tuple:
+    if not entity_text or not clinical_text:
+        return True, ""
+    ent_lower = entity_text.lower().strip()
+    text_lower = clinical_text.lower()
+    idx = text_lower.find(ent_lower)
+    if idx != -1:
+        sentences = re.split(r'(?<=[.!?])\s+|\n+', clinical_text)
+        for s in sentences:
+            if ent_lower in s.lower():
+                return True, s.strip()
+        return True, clinical_text[max(0, idx-50):min(len(clinical_text), idx+len(entity_text)+50)]
+    ent_clean = re.sub(r'[^\w\s]', ' ', ent_lower)
+    ent_clean_compact = re.sub(r'\s+', ' ', ent_clean).strip()
+    text_clean = re.sub(r'[^\w\s]', ' ', text_lower)
+    text_clean_compact = re.sub(r'\s+', ' ', text_clean)
+    if ent_clean_compact and ent_clean_compact in text_clean_compact:
+        sentences = re.split(r'(?<=[.!?])\s+|\n+', clinical_text)
+        for s in sentences:
+            s_clean = re.sub(r'[^\w\s]', ' ', s.lower())
+            if ent_clean_compact in s_clean:
+                return True, s.strip()
+        return True, clinical_text[:100]
+    stopwords = {'a', 'an', 'the', 'is', 'was', 'are', 'were', 'of', 'in', 'on', 'at', 'to', 'for', 'with', 'and', 'or', 'by'}
+    tokens = [t for t in re.findall(r'\b\w+\b', ent_lower) if t not in stopwords]
+    if tokens:
+        matched_tokens = [t for t in tokens if t in text_lower or t in text_clean_compact]
+        numbers_in_ent = re.findall(r'\d+', ent_lower)
+        if numbers_in_ent:
+            num_matched = any(num in text_lower for num in numbers_in_ent)
+            if not num_matched:
+                return False, ""
+        if len(matched_tokens) >= max(1, len(tokens) // 2):
+            sentences = re.split(r'(?<=[.!?])\s+|\n+', clinical_text)
+            for s in sentences:
+                s_lower = s.lower()
+                if any(t in s_lower for t in matched_tokens):
+                    return True, s.strip()
+            return True, clinical_text[:100]
+    return False, ""
 
+def analyze_entity_context(entity_text: str, sentence_context: str, category: str) -> str:
+    s_lower = sentence_context.lower() if sentence_context else ""
+    family_kws = ['mother', 'father', 'brother', 'sister', 'parent', 'family history', 'relative', 'maternal', 'paternal']
+    if any(k in s_lower for k in family_kws):
+        return "Family History"
+    neg_patterns = [
+        r'\bno\s+evidence\s+of\b', r'\bdenies\b', r'\bno\s+history\s+of\b', r'\bno\b',
+        r'\bnone\b', r'\bnegative\s+for\b', r'\bruled\s+out\b', r'\bwithout\b', r'\bno\s+active\b'
+    ]
+    for pat in neg_patterns:
+        if re.search(pat, s_lower):
+            return "Negated"
+    suspect_kws = ['possible', 'suspected', 'probable', 'likely', 'rule out', 'query', '?']
+    if any(k in s_lower for k in suspect_kws):
+        return "Suspected"
+    past_kws = ['history of', 'past history', 'previous', 'prior', 'former', 'h/o', 'previously']
+    if any(k in s_lower for k in past_kws):
+        return "Historical"
+    plan_kws = ['referred for', 'recommended', 'planned', 'awaiting', 'will arrange', 'referral to', 'referred to']
+    if any(k in s_lower for k in plan_kws):
+        return "Recommended" if category in ["Procedure", "Medication"] else "Planned"
+    if category == "Procedure":
+        return "Performed"
+    elif category == "Vital":
+        return "N/A"
+    return "Current"
+
+VALID_UI_STATUSES = {
+    "Diagnosis": ["Current", "Historical", "Negated", "Resolved", "Suspected"],
+    "Symptom": ["Current", "Historical", "Negated", "Resolved", "Warning", "Side Effects"],
+    "Procedure": ["Performed", "Planned", "Recommended", "Monitoring"],
+    "Medication": ["Current", "Started", "Stopped", "Changed", "Recommended"],
+    "Vital": ["N/A"]
+}
+
+STATUS_MAPPING = {
+    "planned/recommended": {"Procedure": "Recommended", "Medication": "Recommended", "default": "Planned"},
+    "planned": {"Procedure": "Planned", "default": "Planned"},
+    "recommended": {"Procedure": "Recommended", "Medication": "Recommended", "default": "Recommended"},
+    "family history": {"default": "Historical"},
+    "past": {"default": "Historical"},
+    "previous": {"default": "Historical"},
+    "prior": {"default": "Historical"},
+    "rule out": {"default": "Suspected"},
+    "possible": {"default": "Suspected"},
+    "side effect": {"default": "Side Effects"},
+    "side-effects": {"default": "Side Effects"},
+    "active": {"default": "Current"},
+    "discontinued": {"Medication": "Stopped", "default": "Stopped"}
+}
+
+def normalize_status_for_category(status_raw: str, category: str) -> str:
+    valid_options = VALID_UI_STATUSES.get(category, ["Current"])
+    if not status_raw:
+        return valid_options[0]
+    for opt in valid_options:
+        if opt.lower() == status_raw.lower():
+            return opt
+    s_lower = status_raw.lower().strip()
+    if s_lower in STATUS_MAPPING:
+        mapping = STATUS_MAPPING[s_lower]
+        target = mapping.get(category, mapping.get("default"))
+        if target in valid_options:
+            return target
+    if "plan" in s_lower:
+        return "Planned" if "Planned" in valid_options else valid_options[0]
+    if "recom" in s_lower:
+        return "Recommended" if "Recommended" in valid_options else valid_options[0]
+    if "hist" in s_lower or "past" in s_lower:
+        return "Historical" if "Historical" in valid_options else valid_options[0]
+    if "suspect" in s_lower or "possible" in s_lower or "query" in s_lower:
+        return "Suspected" if "Suspected" in valid_options else valid_options[0]
+    if "negat" in s_lower or "deni" in s_lower or "no " in s_lower:
+        return "Negated" if "Negated" in valid_options else valid_options[0]
+    if "stop" in s_lower or "cease" in s_lower:
+        return "Stopped" if "Stopped" in valid_options else valid_options[0]
+    if "side" in s_lower:
+        return "Side Effects" if "Side Effects" in valid_options else valid_options[0]
+    if "warn" in s_lower:
+        return "Warning" if "Warning" in valid_options else valid_options[0]
+    return valid_options[0]
+
+def validate_and_correct_category(entity_text: str, candidate_categories: List[str]) -> str:
+    text_lower = entity_text.lower().strip()
+    procedure_kws = [
+        'physiotherapy', 'physio', 'surgery', 'biopsy', 'scan', 'mri', 'ct', 'ultrasound', 'x-ray',
+        'referral', 'referred', 'appointment', 'checkup', 'ecg', 'endoscopy', 'colonoscopy',
+        'blood test', 'urine test', 'injection', 'rehabilitation', 'follow-up', 'investigation',
+        'gp review', 'examination', 'pathway', 'dressing', 'treatment'
+    ]
+    if any(k in text_lower for k in procedure_kws) or text_lower.endswith(('ectomy', 'otomy', 'plasty', 'scopy', 'graphy')):
+        return "Procedure"
+    symptom_kws = [
+        'pain', 'back pain', 'chronic back pain', 'chest pain', 'nocturnal pain', 'ache', 'aching',
+        'cough', 'fever', 'pyrexia', 'nausea', 'vomiting', 'dizziness', 'fatigue',
+        'shortness of breath', 'sob', 'breathlessness', 'rash', 'headache', 'swelling', 'edema',
+        'weakness', 'diarrhoea', 'constipation', 'numbness', 'tingling', 'stiffness', 'cramp', 'spasm'
+    ]
+    if any(k in text_lower for k in symptom_kws):
+        if not any(d_kw in text_lower for d_kw in ['disease', 'syndrome', 'cancer', 'carcinoma', 'infection', 'disorder']):
+            return "Symptom"
+    vital_kws = [
+        'blood pressure', 'bp', 'heart rate', 'pulse', 'respiratory rate', 'temperature',
+        'weight', 'height', 'bmi', 'creatinine', 'platelets', 'hemoglobin', 'hba1c', 'o2 sat'
+    ]
+    if any(k in text_lower for k in vital_kws) or re.search(r'\d+\.?\d*\s*(kg|mmHg|bpm|cm|%|mg/dl)', text_lower):
+        return "Vital"
+    diag_kws = [
+        'infection', 'urinary tract infection', 'uti', 'delirium', 'cancer', 'carcinoma',
+        'hypertension', 'diabetes', 'asthma', 'copd', 'arthritis', 'osteoarthritis', 'disease', 'syndrome',
+        'disorder', 'suspected cancer'
+    ]
+    if any(k in text_lower for k in diag_kws):
+        return "Diagnosis"
+    med_keywords = [
+        'mounjaro', 'aspirin', 'paracetamol', 'ibuprofen', 'metformin',
+        'atorvastatin', 'amlodipine', 'lisinopril', 'levothyroxine', 'albuterol',
+        'ventolin', 'omeprazole', 'simvastatin', 'ramipril', 'bisoprolol', 'prednisolone',
+        'warfarin', 'apixaban', 'clopidogrel', 'gabapentin', 'sertraline', 'amoxicillin',
+        'codeine', 'morphine', 'furosemide', 'tramadol', 'co-codamol', 'naproxen'
+    ]
+    med_suffixes = ('pam', 'ol', 'ine', 'ide', 'pril', 'sartan', 'statin', 'asone', 'olol', 'cillin')
+    non_med_words = {'pain', 'brain', 'skin', 'stain', 'vein', 'strain', 'sprain', 'drain', 'grain', 'main', 'chain', 'domain'}
+    if not any(w in text_lower for w in non_med_words):
+        if any(k in text_lower for k in med_keywords):
+            return "Medication"
+        if text_lower.endswith(med_suffixes) and len(text_lower) > 4:
+            return "Medication"
+    if candidate_categories:
+        valid_candidates = [c for c in candidate_categories if c in ["Diagnosis", "Symptom", "Procedure", "Medication", "Vital"]]
+        if valid_candidates:
+            from collections import Counter
+            counts = Counter(valid_candidates)
+            most_common = counts.most_common(1)[0][0]
+            if most_common == "Medication" and any(k in text_lower for k in symptom_kws + procedure_kws):
+                return "Symptom" if any(k in text_lower for k in symptom_kws) else "Procedure"
+            return most_common
+    return "Diagnosis"
+
+def build_3_model_consensus_from_final_pipeline(cb_cats: dict, mc_cats: dict, qw_cats: dict, clinical_text: str = ""):
+    raw_candidates = []
+    if isinstance(cb_cats, dict):
+        for cat, items in cb_cats.items():
+            for item in items:
+                t = item.get("text") if isinstance(item, dict) else str(item)
+                st = item.get("status", "") if isinstance(item, dict) else ""
+                if t and t.strip():
+                    raw_candidates.append({"text": t.strip(), "cat": cat, "snomed": "", "status": st, "model": "ClinicalBERT"})
+    if isinstance(mc_cats, dict):
+        for cat, items in mc_cats.items():
+            for item in items:
+                t = item.get("text") if isinstance(item, dict) else str(item)
+                cui = item.get("cui") if isinstance(item, dict) else ""
+                st = item.get("status", "") if isinstance(item, dict) else ""
+                if t and t.strip():
+                    raw_candidates.append({"text": t.strip(), "cat": cat, "snomed": cui or "", "status": st, "model": "MedCAT"})
+    qw_key_map = {"Diagnosis": "diagnoses", "Symptom": "symptoms", "Procedure": "procedures", "Medication": "medications", "Vital": "vitals"}
+    if isinstance(qw_cats, dict):
+        for cat, q_key in qw_key_map.items():
+            items = qw_cats.get(q_key, [])
+            for item in items:
+                t = item.get("entity", "") if isinstance(item, dict) else (item.get("text", "") if isinstance(item, dict) else str(item))
+                snomed_val = item.get("snomed", "") if isinstance(item, dict) else ""
+                st = item.get("status", "") if isinstance(item, dict) else ""
+                if snomed_val == "Not found":
+                    snomed_val = ""
+                if t and t.strip():
+                    raw_candidates.append({"text": t.strip(), "cat": cat, "snomed": snomed_val, "status": st, "model": "Qwen"})
+
+    merged_pool = []
+    for cand in raw_candidates:
+        c_text = cand["text"]
+        m_name = cand["model"]
+        c_cat = cand["cat"]
+        c_snomed = cand["snomed"]
+        c_status = cand.get("status", "")
+        matched = None
+        for target in merged_pool:
+            t_text = target["text"]
+            if c_text.lower() == t_text.lower():
+                matched = target
+                break
+            if len(c_text) > 3 and len(t_text) > 3 and (c_text.lower() in t_text.lower() or t_text.lower() in c_text.lower()):
+                matched = target
+                break
+            if get_fuzzy_similarity(c_text, t_text) >= 0.70:
+                matched = target
+                break
+        if matched:
+            matched["models"][m_name] = True
+            matched["categories"].append(c_cat)
+            if c_snomed and not matched.get("snomed"):
+                matched["snomed"] = c_snomed
+            if c_status and not matched.get("status"):
+                matched["status"] = c_status
+            if len(c_text) > len(matched["text"]) and c_text.lower() in clinical_text.lower():
+                matched["text"] = c_text
+        else:
+            merged_pool.append({
+                "text": c_text,
+                "categories": [c_cat],
+                "snomed": c_snomed,
+                "status": c_status,
+                "models": {"ClinicalBERT": False, "MedCAT": False, "Qwen": False}
+            })
+            merged_pool[-1]["models"][m_name] = True
+
+    merged_pool = qwen_filter_junk_entities(merged_pool, clinical_text)
     all_entities = []
     counter = 0
 
-    for cat in categories:
-        q_key = qw_key_map[cat]
-
-        cb_raw = cb_cats.get(cat, []) if isinstance(cb_cats, dict) else []
-        mc_raw = mc_cats.get(cat, []) if isinstance(mc_cats, dict) else []
-        qw_raw = qw_cats.get(q_key, []) if isinstance(qw_cats, dict) else []
-
-        model_candidates = []
-
-        # 1. ClinicalBERT candidates
-        for c in cb_raw:
-            t = c.get("text") if isinstance(c, dict) else str(c)
-            if t:
-                model_candidates.append({"text": t.strip(), "snomed": "", "model": "ClinicalBERT"})
-
-        # 2. MedCAT candidates
-        for c in mc_raw:
-            t = c.get("text") if isinstance(c, dict) else str(c)
-            cui = c.get("cui") if isinstance(c, dict) else ""
-            if t:
-                model_candidates.append({"text": t.strip(), "snomed": cui or "", "model": "MedCAT"})
-
-        # 3. Qwen candidates
-        for c in qw_raw:
-            t = c.get("entity", "") if isinstance(c, dict) else (c.get("text", "") if isinstance(c, dict) else str(c))
-            snomed_val = c.get("snomed", "") if isinstance(c, dict) else ""
-            if snomed_val == "Not found":
-                snomed_val = ""
-            if t:
-                model_candidates.append({"text": t.strip(), "snomed": snomed_val, "model": "Qwen"})
-
-        # Group & Merge candidates across all 3 models
-        merged_entities = []
-        for cand in model_candidates:
-            m_name = cand["model"]
-            c_text = cand["text"]
-            c_snomed = cand["snomed"]
-
-            matched = None
-            for target in merged_entities:
-                t_text = target["text"]
-
-                # Exact match
-                if c_text.lower() == t_text.lower():
-                    matched = target
-                    break
-                # Substring containment
-                if len(c_text) > 3 and len(t_text) > 3 and (c_text.lower() in t_text.lower() or t_text.lower() in c_text.lower()):
-                    matched = target
-                    break
-                # Fuzzy match
-                if get_fuzzy_similarity(c_text, t_text) >= 0.70:
-                    matched = target
-                    break
-
-            if matched:
-                matched["models"][m_name] = True
-                if c_snomed and not matched.get("snomed"):
-                    matched["snomed"] = c_snomed
-                if len(c_text) > len(matched["text"]):
-                    matched["text"] = c_text
-            else:
-                entry = {
-                    "text": c_text,
-                    "category": cat,
-                    "snomed": c_snomed,
-                    "models": {"ClinicalBERT": False, "MedCAT": False, "Qwen": False}
-                }
-                entry["models"][m_name] = True
-                merged_entities.append(entry)
-
-        # Qwen Dynamic LLM Junk & Noise Filter
-        merged_entities = qwen_filter_junk_entities(merged_entities, clinical_text)
-
-        for entry in merged_entities:
-            counter += 1
-            confidence, validation_status, n_matches = calculate_consensus_confidence(entry["models"])
-
-            status_val = {
-                "Diagnosis": "Current",
-                "Symptom": "Current",
-                "Procedure": "Performed",
-                "Medication": "Current",
-                "Vital": "N/A"
-            }.get(cat, "Current")
-
-            all_entities.append({
-                "id": f"E{counter}",
-                "text": entry["text"],
-                "category": cat,
-                "confidence": float(confidence),
-                "validation_status": validation_status,
-                "status": status_val,
-                "snomed": entry.get("snomed", ""),
-                "models": entry["models"],
-                "decision": "Yes"
-            })
-
+    for item in merged_pool:
+        ent_text = item["text"]
+        is_supported, sentence_context = check_ocr_evidence(ent_text, clinical_text)
+        if not is_supported and clinical_text.strip():
+            print(f"[VALIDATION REJECTED] Entity '{ent_text}' has no evidence in OCR text.")
+            continue
+        validated_category = validate_and_correct_category(ent_text, item["categories"])
+        raw_st = item.get("status", "")
+        if not raw_st or raw_st == "N/A":
+            raw_st = analyze_entity_context(ent_text, sentence_context, validated_category)
+        status_val = normalize_status_for_category(raw_st, validated_category)
+        confidence, validation_status, n_matches = calculate_consensus_confidence(item["models"])
+        counter += 1
+        all_entities.append({
+            "id": f"E{counter}",
+            "text": ent_text,
+            "category": validated_category,
+            "confidence": float(confidence),
+            "validation_status": validation_status,
+            "status": status_val,
+            "snomed": item.get("snomed", ""),
+            "models": item["models"],
+            "evidence_text": sentence_context,
+            "decision": "Yes"
+        })
     all_entities.sort(key=lambda e: e["confidence"], reverse=True)
     return all_entities
 

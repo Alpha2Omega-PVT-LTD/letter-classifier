@@ -6,16 +6,956 @@
       "filename": "clinical_letter.pdf",
       "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\clinical_letter.pdf",
       "text": "MEMORIAL RIVERVIEW HOSPITAL\nDepartment of Internal Medicine | 123 Elm Street, Springfield, IL 62704\nPatient:\nMarcus J. Whitfield\nDOB:\n14/03/1968 (Age 58)\nMRN:\n0047-2291-XR\nDate of Letter:\n28/08/2026\nReferring Physician: Dr. Angela Torres, MD\nConsulting Physician: Dr. Rajiv Menon, MD (Cardiology)\nDear Dr. Torres,\nThank you for referring Mr. Whitfield for cardiology evaluation following his admission on 22/08/2026. He\npresented in hypertensive urgency, with a blood pressure of 198/124 mmHg on arrival, which has since\nresolved with treatment. During this admission he was also newly diagnosed with Type 2 Diabetes\nMellitus, based on an HbA1c of 8.9% and a fasting glucose of 216 mg/dL, and further workup revealed\nStage 2 Chronic Kidney Disease with an eGFR of 68 mL/min/1.73m\u00b2, along with mild left ventricular\nhypertrophy noted on echocardiogram.\nHis past medical history is notable for essential hypertension diagnosed in 2015 and hyperlipidemia\ndiagnosed in 2017. He also has a history of gout, with his last flare in 2021, and underwent an\nappendectomy in 1989. Of note, his father died of a myocardial infarction at age 61, which is relevant\ngiven his current presentation.\nAt the time of discharge on 27/08/2026, Mr. Whitfield was hemodynamically stable, with a blood pressure\nof 138/86 mmHg, heart rate of 78 bpm and regular, respiratory rate of 16 per minute, temperature of\n36.7\u00b0C, and oxygen saturation of 98% on room air. He weighs 94.2 kg and is 178 cm tall, giving a BMI of\n29.7.\nDuring his stay, he underwent a 12-lead ECG on 22/08/2026, which showed sinus rhythm without acute\nST changes. A transthoracic echocardiogram performed the following day, on 23/08/2026, demonstrated\nan LVEF of 55% with mild LVH and no valvular abnormality. A renal ultrasound on 24/08/2026 showed no\nhydronephrosis, though there was mild cortical thinning noted bilaterally.\nHe has been started on amlodipine 10 mg orally once daily and losartan 100 mg orally once daily for blood\npressure control, along with metformin 500 mg orally twice daily, which is being titrated up to 1000 mg\ntwice daily over the next two weeks for his newly diagnosed diabetes. He remains on atorvastatin 40 mg\norally at night for hyperlipidemia and aspirin 81 mg orally daily.\nWe discussed the potential side effects of these medications with the patient in detail. With amlodipine, he\nmay experience peripheral edema, flushing, or dizziness. Metformin can cause gastrointestinal upset and\ndiarrhea, and carries a rare risk of lactic acidosis, so he was advised to hold the medication prior to any\ncontrast imaging studies. Atorvastatin may cause myalgia and, rarely, hepatotoxicity, so we will be\nchecking his liver function tests in six weeks. Losartan carries risks of hyperkalemia and hypotension, and\nalthough cough is less common than with ACE inhibitors, this was also mentioned.\nMr. Whitfield was counseled extensively on warning symptoms that should prompt him to seek immediate\nmedical attention. These include chest pain, pressure, or tightness lasting more than five minutes, sudden\n\nshortness of breath or orthopnea, and blurred vision, severe headache, or confusion, which could indicate\na hypertensive emergency. He was also warned about symptoms of hypoglycemia, such as a blood\nglucose below 70 mg/dL accompanied by sweating, tremor, or confusion, as well as muscle weakness or\ndark urine, which could signal rhabdomyolysis related to his statin therapy. Finally, he was told to seek\nurgent care for any swelling of the face or tongue or difficulty breathing, which could represent\nangioedema.\nGoing forward, we plan to see him back in cardiology clinic in four weeks, with repeat HbA1c and renal\npanel testing in three months. He has been asked to monitor his blood pressure at home twice daily and\nbring his log to the next visit. A dietary consult has been arranged to support him with diabetic and\nlow-sodium dietary changes, and we will continue his low-dose aspirin while reassessing his bleeding risk\non an annual basis.\nPlease do not hesitate to contact our office with any questions.\nSincerely,\nDr. Rajiv Menon, MD\nCardiology, Memorial Riverview Hospital",
-      "has_extractions": false,
-      "reviewed": false,
-      "extracted_entities": null,
-      "final_results": null
+      "has_extractions": true,
+      "reviewed": true,
+      "extracted_entities": [
+        {
+          "id": "E1",
+          "text": "Type 2 Diabetes\nMellitus",
+          "category": "Diagnosis",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "44054006",
+          "decision": "Yes"
+        },
+        {
+          "id": "E2",
+          "text": "Stage 2 Chronic Kidney Disease",
+          "category": "Diagnosis",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "431856006",
+          "decision": "Yes"
+        },
+        {
+          "id": "E3",
+          "text": "mild left ventricular\nhypertrophy",
+          "category": "Diagnosis",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "840303004",
+          "decision": "Yes"
+        },
+        {
+          "id": "E4",
+          "text": "essential hypertension",
+          "category": "Diagnosis",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "59621000",
+          "decision": "Yes"
+        },
+        {
+          "id": "E5",
+          "text": "hyperlipidemia",
+          "category": "Diagnosis",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "55822004",
+          "decision": "Yes"
+        },
+        {
+          "id": "E6",
+          "text": "blurred vision",
+          "category": "Diagnosis",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "246636008",
+          "decision": "Yes"
+        },
+        {
+          "id": "E7",
+          "text": "confusion",
+          "category": "Diagnosis",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "286933003",
+          "decision": "Yes"
+        },
+        {
+          "id": "E8",
+          "text": "hypoglycemia",
+          "category": "Diagnosis",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "302866003",
+          "decision": "Yes"
+        },
+        {
+          "id": "E9",
+          "text": "difficulty breathing",
+          "category": "Symptom",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "230145002",
+          "decision": "Yes"
+        },
+        {
+          "id": "E10",
+          "text": "chest pain",
+          "category": "Symptom",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "29857009",
+          "decision": "Yes"
+        },
+        {
+          "id": "E11",
+          "text": "shortness of breath",
+          "category": "Symptom",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "267036007",
+          "decision": "Yes"
+        },
+        {
+          "id": "E12",
+          "text": "severe headache",
+          "category": "Symptom",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "25064002",
+          "decision": "Yes"
+        },
+        {
+          "id": "E13",
+          "text": "muscle weakness",
+          "category": "Symptom",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "26544005",
+          "decision": "Yes"
+        },
+        {
+          "id": "E14",
+          "text": "angioedema",
+          "category": "Symptom",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "846575004",
+          "decision": "Yes"
+        },
+        {
+          "id": "E15",
+          "text": "A transthoracic echocardiogram",
+          "category": "Procedure",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Performed",
+          "snomed": "40701008",
+          "decision": "Yes"
+        },
+        {
+          "id": "E16",
+          "text": "appendectomy",
+          "category": "Procedure",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Performed",
+          "snomed": "80146002",
+          "decision": "Yes"
+        },
+        {
+          "id": "E17",
+          "text": "a 12-lead ECG",
+          "category": "Procedure",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Negated",
+          "snomed": "268400002",
+          "decision": "Yes"
+        },
+        {
+          "id": "E18",
+          "text": "A renal ultrasound",
+          "category": "Procedure",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Negated",
+          "snomed": "306005",
+          "decision": "Yes"
+        },
+        {
+          "id": "E19",
+          "text": "his statin therapy",
+          "category": "Procedure",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Performed",
+          "snomed": "315053001",
+          "decision": "Yes"
+        },
+        {
+          "id": "E20",
+          "text": "amlodipine 10 mg",
+          "category": "Medication",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "386864001",
+          "decision": "Yes"
+        },
+        {
+          "id": "E21",
+          "text": "losartan 100 mg",
+          "category": "Medication",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "373567002",
+          "decision": "Yes"
+        },
+        {
+          "id": "E22",
+          "text": "metformin 500 mg",
+          "category": "Medication",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "372567009",
+          "decision": "Yes"
+        },
+        {
+          "id": "E23",
+          "text": "dark urine",
+          "category": "Medication",
+          "confidence": 0.98,
+          "validation_status": "High Consensus",
+          "status": "Current",
+          "snomed": "39575007",
+          "decision": "Yes"
+        },
+        {
+          "id": "E24",
+          "text": "hypertensive urgency",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "443482000",
+          "decision": "Yes"
+        },
+        {
+          "id": "E25",
+          "text": "gout",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Historical",
+          "snomed": "",
+          "decision": "Yes"
+        },
+        {
+          "id": "E26",
+          "text": "hydronephrosis",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "43064006",
+          "decision": "Yes"
+        },
+        {
+          "id": "E27",
+          "text": "his newly diagnosed diabetes",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "405749004",
+          "decision": "Yes"
+        },
+        {
+          "id": "E28",
+          "text": "flushing",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "238810007",
+          "decision": "Yes"
+        },
+        {
+          "id": "E29",
+          "text": "gastrointestinal upset",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "95516005",
+          "decision": "Yes"
+        },
+        {
+          "id": "E30",
+          "text": "diarrhea",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Historical",
+          "snomed": "62315008",
+          "decision": "Yes"
+        },
+        {
+          "id": "E31",
+          "text": "myalgia",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "68962001",
+          "decision": "Yes"
+        },
+        {
+          "id": "E32",
+          "text": "hepatotoxicity",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "197354009",
+          "decision": "Yes"
+        },
+        {
+          "id": "E33",
+          "text": "hyperkalemia",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "14140009",
+          "decision": "Yes"
+        },
+        {
+          "id": "E34",
+          "text": "hypotension",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "45007003",
+          "decision": "Yes"
+        },
+        {
+          "id": "E35",
+          "text": "orthopnea",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "62744007",
+          "decision": "Yes"
+        },
+        {
+          "id": "E36",
+          "text": "a hypertensive emergency",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "132721000119104",
+          "decision": "Yes"
+        },
+        {
+          "id": "E37",
+          "text": "sweating",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "415690000",
+          "decision": "Yes"
+        },
+        {
+          "id": "E38",
+          "text": "tremor",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "26079004",
+          "decision": "Yes"
+        },
+        {
+          "id": "E39",
+          "text": "rhabdomyolysis",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "240131006",
+          "decision": "Yes"
+        },
+        {
+          "id": "E40",
+          "text": "swelling of the face or tongue",
+          "category": "Symptom",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "",
+          "decision": "Yes"
+        },
+        {
+          "id": "E41",
+          "text": "his bleeding risk",
+          "category": "Diagnosis",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "131148009",
+          "decision": "Yes"
+        },
+        {
+          "id": "E42",
+          "text": "peripheral edema",
+          "category": "Symptom",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "271809000",
+          "decision": "Yes"
+        },
+        {
+          "id": "E43",
+          "text": "dizziness",
+          "category": "Symptom",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "404640003",
+          "decision": "Yes"
+        },
+        {
+          "id": "E44",
+          "text": "any swelling of the face",
+          "category": "Symptom",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "65124004",
+          "decision": "Yes"
+        },
+        {
+          "id": "E45",
+          "text": "an HbA1c",
+          "category": "Vital",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "N/A",
+          "snomed": "259689004",
+          "decision": "Yes"
+        },
+        {
+          "id": "E46",
+          "text": "a fasting glucose",
+          "category": "Procedure",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Performed",
+          "snomed": "792805006",
+          "decision": "Yes"
+        },
+        {
+          "id": "E47",
+          "text": "an eGFR",
+          "category": "Procedure",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Performed",
+          "snomed": "86960007",
+          "decision": "Yes"
+        },
+        {
+          "id": "E48",
+          "text": "a myocardial infarction",
+          "category": "Procedure",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Family History",
+          "snomed": "22298006",
+          "decision": "Yes"
+        },
+        {
+          "id": "E49",
+          "text": "these medications",
+          "category": "Medication",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "410942007",
+          "decision": "Yes"
+        },
+        {
+          "id": "E50",
+          "text": "lactic acidosis",
+          "category": "Procedure",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Historical",
+          "snomed": "91273001",
+          "decision": "Yes"
+        },
+        {
+          "id": "E51",
+          "text": "contrast imaging studies",
+          "category": "Procedure",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Performed",
+          "snomed": "363679005",
+          "decision": "Yes"
+        },
+        {
+          "id": "E52",
+          "text": "A dietary",
+          "category": "Procedure",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Performed",
+          "snomed": "41829006",
+          "decision": "Yes"
+        },
+        {
+          "id": "E53",
+          "text": "low-sodium dietary changes",
+          "category": "Procedure",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Performed",
+          "snomed": "386619000",
+          "decision": "Yes"
+        },
+        {
+          "id": "E54",
+          "text": "atorvastatin",
+          "category": "Medication",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "373444002",
+          "decision": "Yes"
+        },
+        {
+          "id": "E55",
+          "text": "his low-dose aspirin",
+          "category": "Medication",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "Current",
+          "snomed": "387458008",
+          "decision": "Yes"
+        },
+        {
+          "id": "E56",
+          "text": "Blood Pressure: 198/124",
+          "category": "Vital",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "N/A",
+          "snomed": "",
+          "decision": "Yes"
+        },
+        {
+          "id": "E57",
+          "text": "Blood Pressure: 138/86",
+          "category": "Vital",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "N/A",
+          "snomed": "",
+          "decision": "Yes"
+        },
+        {
+          "id": "E58",
+          "text": "oxygen saturation",
+          "category": "Vital",
+          "confidence": 0.85,
+          "validation_status": "Consensus",
+          "status": "N/A",
+          "snomed": "264598005",
+          "decision": "Yes"
+        },
+        {
+          "id": "E59",
+          "text": "Chronic Kidney Disease",
+          "category": "Diagnosis",
+          "confidence": 0.75,
+          "validation_status": "Validated",
+          "status": "Current",
+          "snomed": "",
+          "decision": "Yes"
+        },
+        {
+          "id": "E60",
+          "text": "mild LVH",
+          "category": "Diagnosis",
+          "confidence": 0.75,
+          "validation_status": "Validated",
+          "status": "Negated",
+          "snomed": "",
+          "decision": "Yes"
+        },
+        {
+          "id": "E61",
+          "text": "mild cortical thinning",
+          "category": "Diagnosis",
+          "confidence": 0.75,
+          "validation_status": "Validated",
+          "status": "Current",
+          "snomed": "",
+          "decision": "Yes"
+        },
+        {
+          "id": "E62",
+          "text": "sinus rhythm",
+          "category": "Symptom",
+          "confidence": 0.75,
+          "validation_status": "Validated",
+          "status": "Negated",
+          "snomed": "251150006",
+          "decision": "Yes"
+        },
+        {
+          "id": "E63",
+          "text": "LVEF of 55%",
+          "category": "Vital",
+          "confidence": 0.75,
+          "validation_status": "Validated",
+          "status": "Negated",
+          "snomed": "",
+          "decision": "Yes"
+        }
+      ],
+      "final_results": {
+        "diagnoses": [
+          {
+            "entity": "Type 2 Diabetes\nMellitus",
+            "status": "Current",
+            "snomed": "44054006"
+          },
+          {
+            "entity": "Stage 2 Chronic Kidney Disease",
+            "status": "Current",
+            "snomed": "431856006"
+          },
+          {
+            "entity": "mild left ventricular\nhypertrophy",
+            "status": "Current",
+            "snomed": "840303004"
+          },
+          {
+            "entity": "essential hypertension",
+            "status": "Current",
+            "snomed": "59621000"
+          },
+          {
+            "entity": "hyperlipidemia",
+            "status": "Current",
+            "snomed": "55822004"
+          },
+          {
+            "entity": "blurred vision",
+            "status": "Current",
+            "snomed": "246636008"
+          },
+          {
+            "entity": "confusion",
+            "status": "Current",
+            "snomed": "286933003"
+          },
+          {
+            "entity": "hypoglycemia",
+            "status": "Current",
+            "snomed": "302866003"
+          },
+          {
+            "entity": "hypertensive urgency",
+            "status": "Current",
+            "snomed": "443482000"
+          },
+          {
+            "entity": "gout",
+            "status": "Historical",
+            "snomed": "90560007 | Gout"
+          },
+          {
+            "entity": "hydronephrosis",
+            "status": "Current",
+            "snomed": "43064006"
+          },
+          {
+            "entity": "his newly diagnosed diabetes",
+            "status": "Current",
+            "snomed": "405749004"
+          },
+          {
+            "entity": "flushing",
+            "status": "Current",
+            "snomed": "238810007"
+          },
+          {
+            "entity": "gastrointestinal upset",
+            "status": "Current",
+            "snomed": "95516005"
+          },
+          {
+            "entity": "diarrhea",
+            "status": "Historical",
+            "snomed": "62315008"
+          },
+          {
+            "entity": "myalgia",
+            "status": "Current",
+            "snomed": "68962001"
+          },
+          {
+            "entity": "hepatotoxicity",
+            "status": "Current",
+            "snomed": "197354009"
+          },
+          {
+            "entity": "hyperkalemia",
+            "status": "Current",
+            "snomed": "14140009"
+          },
+          {
+            "entity": "hypotension",
+            "status": "Current",
+            "snomed": "45007003"
+          },
+          {
+            "entity": "orthopnea",
+            "status": "Current",
+            "snomed": "62744007"
+          },
+          {
+            "entity": "a hypertensive emergency",
+            "status": "Current",
+            "snomed": "132721000119104"
+          },
+          {
+            "entity": "sweating",
+            "status": "Current",
+            "snomed": "415690000"
+          },
+          {
+            "entity": "tremor",
+            "status": "Current",
+            "snomed": "26079004"
+          },
+          {
+            "entity": "rhabdomyolysis",
+            "status": "Current",
+            "snomed": "240131006"
+          },
+          {
+            "entity": "his bleeding risk",
+            "status": "Current",
+            "snomed": "131148009"
+          },
+          {
+            "entity": "Chronic Kidney Disease",
+            "status": "Current",
+            "snomed": "709044004 | Chronic kidney disease"
+          },
+          {
+            "entity": "mild LVH",
+            "status": "Negated",
+            "snomed": "API unreachable / Not found"
+          },
+          {
+            "entity": "mild cortical thinning",
+            "status": "Current",
+            "snomed": "Not found"
+          }
+        ],
+        "symptoms": [
+          {
+            "entity": "difficulty breathing",
+            "status": "Current",
+            "snomed": "230145002"
+          },
+          {
+            "entity": "chest pain",
+            "status": "Current",
+            "snomed": "29857009"
+          },
+          {
+            "entity": "shortness of breath",
+            "status": "Current",
+            "snomed": "267036007"
+          },
+          {
+            "entity": "severe headache",
+            "status": "Current",
+            "snomed": "25064002"
+          },
+          {
+            "entity": "muscle weakness",
+            "status": "Current",
+            "snomed": "26544005"
+          },
+          {
+            "entity": "angioedema",
+            "status": "Current",
+            "snomed": "846575004"
+          },
+          {
+            "entity": "swelling of the face or tongue",
+            "status": "Current",
+            "snomed": "Not found"
+          },
+          {
+            "entity": "peripheral edema",
+            "status": "Current",
+            "snomed": "271809000"
+          },
+          {
+            "entity": "dizziness",
+            "status": "Current",
+            "snomed": "404640003"
+          },
+          {
+            "entity": "any swelling of the face",
+            "status": "Current",
+            "snomed": "65124004"
+          },
+          {
+            "entity": "sinus rhythm",
+            "status": "Negated",
+            "snomed": "251150006"
+          }
+        ],
+        "procedures": [
+          {
+            "entity": "A transthoracic echocardiogram",
+            "status": "Performed",
+            "snomed": "40701008"
+          },
+          {
+            "entity": "appendectomy",
+            "status": "Performed",
+            "snomed": "80146002"
+          },
+          {
+            "entity": "a 12-lead ECG",
+            "status": "Negated",
+            "snomed": "268400002"
+          },
+          {
+            "entity": "A renal ultrasound",
+            "status": "Negated",
+            "snomed": "306005"
+          },
+          {
+            "entity": "his statin therapy",
+            "status": "Performed",
+            "snomed": "315053001"
+          },
+          {
+            "entity": "a fasting glucose",
+            "status": "Performed",
+            "snomed": "792805006"
+          },
+          {
+            "entity": "an eGFR",
+            "status": "Performed",
+            "snomed": "86960007"
+          },
+          {
+            "entity": "a myocardial infarction",
+            "status": "Family History",
+            "snomed": "22298006"
+          },
+          {
+            "entity": "lactic acidosis",
+            "status": "Historical",
+            "snomed": "91273001"
+          },
+          {
+            "entity": "contrast imaging studies",
+            "status": "Performed",
+            "snomed": "363679005"
+          },
+          {
+            "entity": "A dietary",
+            "status": "Performed",
+            "snomed": "41829006"
+          },
+          {
+            "entity": "low-sodium dietary changes",
+            "status": "Performed",
+            "snomed": "386619000"
+          }
+        ],
+        "medications": [
+          {
+            "entity": "amlodipine 10 mg",
+            "status": "Current"
+          },
+          {
+            "entity": "losartan 100 mg",
+            "status": "Current"
+          },
+          {
+            "entity": "metformin 500 mg",
+            "status": "Current"
+          },
+          {
+            "entity": "dark urine",
+            "status": "Current"
+          },
+          {
+            "entity": "these medications",
+            "status": "Current"
+          },
+          {
+            "entity": "atorvastatin",
+            "status": "Current"
+          },
+          {
+            "entity": "his low-dose aspirin",
+            "status": "Current"
+          }
+        ],
+        "vitals": [
+          {
+            "entity": "an HbA1c"
+          },
+          {
+            "entity": "Blood Pressure: 198/124"
+          },
+          {
+            "entity": "Blood Pressure: 138/86"
+          },
+          {
+            "entity": "oxygen saturation"
+          },
+          {
+            "entity": "LVEF of 55%"
+          }
+        ]
+      }
     },
     {
       "index": 1,
       "filename": "letter_042_physio.pdf",
       "file_path": "c:\\projects\\nhs_ensemble_ui_bundle\\final_pipeline\\sample_letters\\letter_042_physio.pdf",
-      "text": "",
+      "text": "Berkshire Community Physiotherapy Service\nChurch Hill House, Turing Drive, Bracknell RG12 7FR\n18 April 2026\nTo: The Practice Manager\nRingmead Medical Practice\nBirch Hill Medical Centre\nLeppington, Bracknell\nBerkshire RG12 7WW\nPatient:\nMs Sandra Whitfield\nDOB:\n08/02/1953\nNHS Number:\n999 744 7964\nAddress:\n114 Kestrel Way, Crowthorne, Berkshire, RG45 6LT\nDear GP,\nThe above patient has completed a course of physiotherapy for chronic low back pain with limited benefit.\nExamination today raised persistent nocturnal pain. We would recommend GP review and\nYours sincerely,\nJ Meredith MCSP\nSenior Physiotherapist\nBerkshire Community Physiotherapy Service",
       "has_extractions": false,
       "reviewed": false,
       "extracted_entities": null,
