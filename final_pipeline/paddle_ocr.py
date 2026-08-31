@@ -175,9 +175,28 @@ def extract_text_from_pdf_paddle(pdf_path: str, ocr_instance: Any = None) -> Dic
         except OSError:
             pass
 
+    full_text = "\n\n".join(full_text_lines).strip()
+    
+    # Fallback to pypdf if PaddleOCR failed to extract text
+    if not full_text and PYPDF_AVAILABLE:
+        print(f"[Info] PaddleOCR output empty for {pdf_path}. Falling back to pypdf reader...")
+        try:
+            reader = pypdf.PdfReader(pdf_path)
+            extracted_pages = [page.extract_text() for page in reader.pages if page.extract_text()]
+            full_text = "\n".join(extracted_pages)
+            pages_data = [{"page_num": i + 1, "text": text, "ocr_details": []} for i, text in enumerate(extracted_pages)]
+            return {
+                "pdf_path": pdf_path,
+                "full_text": full_text,
+                "pages": pages_data,
+                "method": "pypdf_fallback"
+            }
+        except Exception as e_pdf:
+            print(f"[warn] pypdf fallback also failed: {e_pdf}")
+
     return {
         "pdf_path": pdf_path,
-        "full_text": "\n\n".join(full_text_lines),
+        "full_text": full_text,
         "pages": pages_data,
         "method": "PaddleOCR"
     }

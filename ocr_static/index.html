@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NHS Clinical OCR & Coding Platform</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/index.css?v=ocr_v2">
 </head>
+
 <body>
     <div class="app-container">
         <header class="app-header">
@@ -34,7 +38,9 @@
                     <h3><i class="fa-solid fa-folder-open"></i> PDF Folder Selection</h3>
                     <div class="form-group">
                         <label for="folder-path-input">Folder Path</label>
-                        <input type="text" id="folder-path-input" class="form-control" placeholder="Enter folder path..." value="">
+                        <input type="text" id="folder-path-input" class="form-control"
+                            placeholder="Enter folder path..."
+                            value="c:\projects\nhs_ensemble_ui_bundle\final_pipeline\sample_letters">
                     </div>
                     <button id="load-folder-btn" class="btn btn-primary btn-block">
                         <i class="fa-solid fa-folder-tree"></i> Load Folder PDFs
@@ -60,9 +66,11 @@
                         <span class="badge badge-info" id="record-index-badge">No PDF Selected</span>
                     </div>
                     <div class="record-navigation-arrows">
-                        <button id="prev-record-btn" class="btn btn-icon" disabled title="Previous PDF"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button id="prev-record-btn" class="btn btn-icon" disabled title="Previous PDF"><i
+                                class="fa-solid fa-chevron-left"></i></button>
                         <span id="record-progress-text">0 of 0</span>
-                        <button id="next-record-btn" class="btn btn-icon" disabled title="Next PDF"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button id="next-record-btn" class="btn btn-icon" disabled title="Next PDF"><i
+                                class="fa-solid fa-chevron-right"></i></button>
                     </div>
                 </div>
 
@@ -86,10 +94,12 @@
                         <div class="panel-body" style="padding: 0; overflow: hidden; position: relative;">
                             <!-- PDF Viewer Frame -->
                             <div id="pdf-viewer-container" class="doc-container">
-                                <iframe id="pdf-viewer-iframe" src="" title="PDF Document Viewer" style="width: 100%; height: 100%; border: none;"></iframe>
+                                <iframe id="pdf-viewer-iframe" src="" title="PDF Document Viewer"
+                                    style="width: 100%; height: 100%; border: none;"></iframe>
                             </div>
                             <!-- OCR Text View Container -->
-                            <div id="text-viewer-container" class="doc-container hide scrollable" style="padding: 18px;">
+                            <div id="text-viewer-container" class="doc-container hide scrollable"
+                                style="padding: 18px;">
                                 <div id="clinical-letter-text" class="clinical-letter-text">
                                     Select a record from the PDF list to view narrative...
                                 </div>
@@ -112,7 +122,8 @@
                             <div id="extraction-empty-state" class="empty-state">
                                 <i class="fa-solid fa-wand-magic-sparkles empty-icon"></i>
                                 <h3>PaddleOCR &amp; Qwen Extraction</h3>
-                                <p>Extract clinical entities, confidence status, and SNOMED codes from the selected PDF.</p>
+                                <p>Extract clinical entities, confidence status, and SNOMED codes from the selected PDF.
+                                </p>
                                 <button id="run-extraction-btn" class="btn btn-primary" disabled>
                                     <i class="fa-solid fa-bolt"></i> Run Entity Extraction
                                 </button>
@@ -122,12 +133,18 @@
                             <div id="entities-workspace" class="entities-workspace hide">
                                 <!-- Category Filter Tabs -->
                                 <div class="category-tabs" id="category-tabs">
-                                    <button class="cat-tab active" data-cat="All"><i class="fa-solid fa-layer-group"></i> All</button>
-                                    <button class="cat-tab" data-cat="Diagnosis"><i class="fa-solid fa-stethoscope"></i> Diagnoses</button>
-                                    <button class="cat-tab" data-cat="Symptom"><i class="fa-solid fa-triangle-exclamation"></i> Symptoms</button>
-                                    <button class="cat-tab" data-cat="Procedure"><i class="fa-solid fa-syringe"></i> Procedures</button>
-                                    <button class="cat-tab" data-cat="Medication"><i class="fa-solid fa-pills"></i> Medications</button>
-                                    <button class="cat-tab" data-cat="Vital"><i class="fa-solid fa-heart-pulse"></i> Vitals</button>
+                                    <button class="cat-tab active" data-cat="All"><i
+                                            class="fa-solid fa-layer-group"></i> All</button>
+                                    <button class="cat-tab" data-cat="Diagnosis"><i class="fa-solid fa-stethoscope"></i>
+                                        Diagnoses</button>
+                                    <button class="cat-tab" data-cat="Symptom"><i
+                                            class="fa-solid fa-triangle-exclamation"></i> Symptoms</button>
+                                    <button class="cat-tab" data-cat="Procedure"><i class="fa-solid fa-syringe"></i>
+                                        Procedures</button>
+                                    <button class="cat-tab" data-cat="Medication"><i class="fa-solid fa-pills"></i>
+                                        Medications</button>
+                                    <button class="cat-tab" data-cat="Vital"><i class="fa-solid fa-heart-pulse"></i>
+                                        Vitals</button>
                                 </div>
                                 <div id="entities-list" class="entities-list scrollable"></div>
                             </div>
@@ -155,8 +172,10 @@
                 </div>
                 <div class="modal-body">
                     <div class="form-group search-bar-group">
-                        <input type="text" id="snomed-search-input" class="form-control" placeholder="Search SNOMED term (e.g. Diabetes, Hypertension)...">
-                        <button id="snomed-search-submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+                        <input type="text" id="snomed-search-input" class="form-control"
+                            placeholder="Search SNOMED term (e.g. Diabetes, Hypertension)...">
+                        <button id="snomed-search-submit" class="btn btn-primary"><i
+                                class="fa-solid fa-magnifying-glass"></i> Search</button>
                     </div>
                     <div class="search-category-info">
                         Scope: <span id="snomed-modal-category" class="status-pill">Diagnosis</span>
@@ -180,4 +199,5 @@
 
     <script src="/static/index.js?v=ocr_v2"></script>
 </body>
+
 </html>
