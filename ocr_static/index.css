@@ -279,7 +279,7 @@ body {
 /* Dual Panels */
 .dual-panels {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1.45fr 0.95fr;
     gap: 16px;
     flex-grow: 1;
     overflow: hidden;
